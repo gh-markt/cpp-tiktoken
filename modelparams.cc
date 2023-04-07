@@ -37,6 +37,7 @@ ModelParams ModelParamsGenerator::get_model_params(LanguageModel model) {
         case LanguageModel::R50K_BASE:
             return r50k_base();
     }
+    throw std::runtime_error("Invalid argument to get_model_params");
 }
 
 #if 1

@@ -1,3 +1,0 @@
-[submodule "pcre2cpp"]
-	path = pcre2cpp
-	url = https://github.com/sjinks/pcre2pp

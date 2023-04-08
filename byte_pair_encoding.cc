@@ -21,7 +21,7 @@
 
 BytePairEncodingCore::BytePairEncodingCore(const std::unordered_map<std::vector<uint8_t>, int, VectorHash>& byte_pair_ranks,
                                            const std::unordered_map<std::string, int>& special_token_mappings,
-                                           const std::regex& pattern_string)
+                                           const std::shared_ptr<PCRERegex> &pattern_string)
         : byte_pair_ranks_(byte_pair_ranks), special_token_mappings_(special_token_mappings), pattern_string_(pattern_string) {}
 
 std::pair<std::vector<int>, std::vector<int>> BytePairEncodingCore::encode_native(const std::string& line_to_encode,
@@ -29,12 +29,8 @@ std::pair<std::vector<int>, std::vector<int>> BytePairEncodingCore::encode_nativ
     std::vector<int> tokens;
     std::vector<int> segment_ids;
 
-    for (std::sregex_iterator it = std::sregex_iterator(line_to_encode.begin(), line_to_encode.end(), pattern_string_),
-                 end = std::sregex_iterator();
-         it != end; ++it) {
-        auto pos = it->position();
-        auto len = it->length();
-        std::string token = it->str();
+    auto matches = pattern_string_->all_matches(line_to_encode);
+    for(auto token : matches) {
         auto special_mapping = special_token_mappings_.find(token);
         if (special_mapping != special_token_mappings_.end() && allowed_special.count(token) > 0) {
             tokens.push_back(special_mapping->second);

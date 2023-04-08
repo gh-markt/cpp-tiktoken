@@ -23,12 +23,13 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include "pcre2_regex.h"
 
 class BytePairEncodingCore {
 public:
     BytePairEncodingCore(const std::unordered_map<std::vector<uint8_t>, int, VectorHash>& byte_pair_ranks,
                          const std::unordered_map<std::string, int>& special_token_mappings,
-                         const std::regex& pattern_string);
+                         const std::shared_ptr<PCRERegex> & pattern_string);
 
     std::pair<std::vector<int>, std::vector<int>> encode_native(const std::string& line_to_encode,
                                                                 const std::unordered_set<std::string>& allowed_special);
@@ -37,5 +38,6 @@ public:
 private:
     std::unordered_map<std::vector<uint8_t>, int, VectorHash> byte_pair_ranks_;
     std::unordered_map<std::string, int> special_token_mappings_;
-    std::regex pattern_string_;
+    std::shared_ptr<PCRERegex> pattern_string_;
+//    std::regex pattern_string_;
 };

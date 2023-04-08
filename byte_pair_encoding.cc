@@ -32,8 +32,9 @@ std::pair<std::vector<int>, std::vector<int>> BytePairEncodingCore::encode_nativ
     for (std::sregex_iterator it = std::sregex_iterator(line_to_encode.begin(), line_to_encode.end(), pattern_string_),
                  end = std::sregex_iterator();
          it != end; ++it) {
+        auto pos = it->position();
+        auto len = it->length();
         std::string token = it->str();
-
         auto special_mapping = special_token_mappings_.find(token);
         if (special_mapping != special_token_mappings_.end() && allowed_special.count(token) > 0) {
             tokens.push_back(special_mapping->second);
@@ -41,35 +42,27 @@ std::pair<std::vector<int>, std::vector<int>> BytePairEncodingCore::encode_nativ
         } else {
             std::vector<uint8_t> utf8_encoded(token.begin(), token.end());
             int prev_token_start = 0;
-
             for (size_t i = 0; i < utf8_encoded.size();) {
-                int token_id = utf8_encoded[i];
-                int token_length = 1;
-                auto current_token = std::string(utf8_encoded.begin() + prev_token_start, utf8_encoded.begin() + prev_token_start + token_length);
-                auto lookup = std::vector<uint8_t>(current_token.begin(), current_token.end());
-
-                while (true) {
-                    auto byte_pair_rank = byte_pair_ranks_.find(lookup);
-
-                    if (byte_pair_rank == byte_pair_ranks_.end()) {
-                        --token_length;
+                int token_length = 0;
+                int token_id = -1;
+                auto lookup = std::vector<uint8_t>(utf8_encoded.begin() + prev_token_start, utf8_encoded.end());
+                while(!lookup.empty()) {
+                    auto byte_pair_range = byte_pair_ranks_.find(lookup);
+                    if (byte_pair_range != byte_pair_ranks_.end()) {
+                        token_id = byte_pair_range->second;
+                        token_length = lookup.size();
                         break;
                     }
-
-                    token_id = byte_pair_rank->second;
-                    ++token_length;
-                    if (prev_token_start + token_length > utf8_encoded.size()) {
-                        --token_length;
-                        break;
-                    }
-                    current_token = std::string(utf8_encoded.begin() + prev_token_start, utf8_encoded.begin() + prev_token_start + token_length);
-                    lookup = std::vector<uint8_t>(current_token.begin(), current_token.end());
+                    lookup.pop_back();
                 }
-
-                tokens.push_back(token_id);
-                segment_ids.push_back(0);
-                i += token_length;
-                prev_token_start = i;
+                if (token_id != -1) {
+                    tokens.push_back(token_id);
+                    segment_ids.push_back(0);
+                    i += token_length;
+                    prev_token_start = i;
+                } else {
+                    throw std::logic_error("Critical error! No token found for " + std::string(utf8_encoded.begin() + prev_token_start, utf8_encoded.end()));
+                }
             }
         }
     }

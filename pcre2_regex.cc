@@ -22,7 +22,7 @@ PCRERegex::PCRERegex(const std::string &pattern, int flags)
 {
     int error = 0;
     PCRE2_SIZE error_offset = 0;
-    flags |= PCRE2_UCP;
+    flags |= PCRE2_UCP | PCRE2_UTF;
     regex_ = pcre2_compile_8(reinterpret_cast<PCRE2_SPTR8>(pattern.c_str()), pattern.size(), static_cast<uint32_t>(flags), &error, &error_offset, nullptr);
     if (!regex_) {
         char buffer[512];

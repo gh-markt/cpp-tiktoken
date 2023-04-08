@@ -9,7 +9,7 @@
 class PCRERegex {
 public:
     PCRERegex(const std::string& pattern, int flags);
-
+    PCRERegex(const PCRERegex &) = delete;
     ~PCRERegex();
 
     std::vector<std::string> all_matches(const std::string& text) const;

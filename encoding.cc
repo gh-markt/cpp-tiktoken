@@ -27,7 +27,7 @@ GptEncoding::GptEncoding(const std::string& pattern_string,
                          int explicit_n_vocab)
         : max_token_value_(0),
           special_token_mappings_(special_token_mappings),
-          byte_pair_encoding_core_processor_(byte_pair_ranks, special_token_mappings, std::regex(pattern_string, std::regex_constants::extended | std::regex_constants::icase)) {
+          byte_pair_encoding_core_processor_(byte_pair_ranks, special_token_mappings, std::regex(pattern_string, std::regex_constants::ECMAScript | std::regex_constants::icase)) {
     // Implementation of the constructor
 }
 

@@ -23,7 +23,8 @@ PCRERegex::PCRERegex(const std::string &pattern, int flags)
     int error = 0;
     PCRE2_SIZE error_offset = 0;
     flags |= PCRE2_UCP | PCRE2_UTF;
-    regex_ = pcre2_compile_8(reinterpret_cast<PCRE2_SPTR8>(pattern.c_str()), pattern.size(), static_cast<uint32_t>(flags), &error, &error_offset, nullptr);
+    regex_ = pcre2_compile_8(reinterpret_cast<PCRE2_SPTR8>(pattern.c_str()), pattern.size(),
+                             static_cast<uint32_t>(flags), &error, &error_offset, nullptr);
     if (!regex_) {
         char buffer[512];
         pcre2_get_error_message_8(error, reinterpret_cast<PCRE2_UCHAR8 *>(buffer), sizeof(buffer));
@@ -41,17 +42,17 @@ std::vector<std::string> PCRERegex::all_matches(const std::string &text) const
     std::vector<std::string> matches;
     PCRE2_SPTR8 text_ptr = reinterpret_cast<PCRE2_SPTR8>(text.c_str());
     PCRE2_SIZE text_length = text.size();
-    pcre2_match_data_8* match_data = pcre2_match_data_create_from_pattern_8(regex_, nullptr);
+    pcre2_match_data_8 *match_data = pcre2_match_data_create_from_pattern_8(regex_, nullptr);
     int start_offset = 0;
     int match_length;
     int rc;
     do {
         rc = pcre2_match_8(regex_, text_ptr, text_length, start_offset, 0, match_data, nullptr);
         if (rc >= 0) {
-            PCRE2_SIZE* ovector = pcre2_get_ovector_pointer_8(match_data);
+            PCRE2_SIZE *ovector = pcre2_get_ovector_pointer_8(match_data);
             PCRE2_SPTR8 match_ptr = text_ptr + ovector[0];
             match_length = ovector[1] - ovector[0];
-            matches.emplace_back(reinterpret_cast<const char*>(match_ptr), match_length);
+            matches.emplace_back(reinterpret_cast<const char *>(match_ptr), match_length);
             start_offset = ovector[1];
         }
     } while (rc >= 0 && start_offset < text_length && match_length > 0);

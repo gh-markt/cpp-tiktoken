@@ -21,15 +21,18 @@
 #include <optional>
 #include <limits>
 
-BytePairEncodingCore::BytePairEncodingCore(const std::unordered_map<std::vector<uint8_t>, int, VectorHash>& byte_pair_ranks,
-                                           const std::unordered_map<std::string, int>& special_token_mappings,
-                                           const std::shared_ptr<PCRERegex> &pattern_string)
-        : byte_pair_ranks_(byte_pair_ranks), special_token_mappings_(special_token_mappings), pattern_string_(pattern_string) {}
+BytePairEncodingCore::BytePairEncodingCore(
+        const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &byte_pair_ranks,
+        const std::unordered_map<std::string, int> &special_token_mappings,
+        const std::shared_ptr<PCRERegex> &pattern_string) : byte_pair_ranks_(byte_pair_ranks),
+                                                            special_token_mappings_(special_token_mappings),
+                                                            pattern_string_(pattern_string)
+{}
 
-template <typename T>
-std::vector<T> BytePairEncodingCore::byte_pair_merge(const std::vector<uint8_t>& piece,
-                                                     const std::unordered_map<std::vector<uint8_t>, int, VectorHash>& ranks,
-                                                     std::function<T(int, int)> f) {
+template<typename T> std::vector<T> BytePairEncodingCore::byte_pair_merge(const std::vector<uint8_t> &piece,
+                                                                          const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &ranks,
+                                                                          std::function<T(int, int)> f)
+{
     std::vector<std::pair<int, int>> partitions(piece.size() + 1);
 
     // Initialize partitions with (i, max_int) values
@@ -42,7 +45,8 @@ std::vector<T> BytePairEncodingCore::byte_pair_merge(const std::vector<uint8_t>&
         if (idx + skip + 2 >= partitions.size()) {
             return std::nullopt;
         }
-        std::vector<uint8_t> key(piece.begin() + partitions[idx].first, piece.begin() + partitions[idx + skip + 2].first);
+        std::vector<uint8_t> key(piece.begin() + partitions[idx].first,
+                                 piece.begin() + partitions[idx + skip + 2].first);
         auto rank_iter = ranks.find(key);
         return (rank_iter != ranks.end()) ? std::optional<int>(rank_iter->second) : std::nullopt;
     };
@@ -69,7 +73,8 @@ std::vector<T> BytePairEncodingCore::byte_pair_merge(const std::vector<uint8_t>&
             partitions[min_rank_idx].second = get_rank(min_rank_idx, 1).value_or(std::numeric_limits<int>::max());
 
             if (min_rank_idx > 0) {
-                partitions[min_rank_idx - 1].second = get_rank(min_rank_idx - 1, 1).value_or(std::numeric_limits<int>::max());
+                partitions[min_rank_idx - 1].second = get_rank(min_rank_idx - 1, 1).value_or(
+                        std::numeric_limits<int>::max());
             }
 
             partitions.erase(partitions.begin() + min_rank_idx + 1);
@@ -87,12 +92,13 @@ std::vector<T> BytePairEncodingCore::byte_pair_merge(const std::vector<uint8_t>&
     return output;
 }
 
-std::pair<std::vector<int>, std::vector<int>> BytePairEncodingCore::encode_native(const std::string& line_to_encode,
-                                                                                  const std::unordered_set<std::string>& allowed_special) {
+std::pair<std::vector<int>, std::vector<int>> BytePairEncodingCore::encode_native(const std::string &line_to_encode,
+                                                                                  const std::unordered_set<std::string> &allowed_special)
+{
     std::vector<int> tokens;
     std::vector<int> segment_ids;
     auto matches = pattern_string_->all_matches(line_to_encode);
-    for (auto token : matches) {
+    for (auto token: matches) {
         auto special_mapping = special_token_mappings_.find(token);
         if (special_mapping != special_token_mappings_.end() && allowed_special.count(token) > 0) {
             tokens.push_back(special_mapping->second);
@@ -118,17 +124,18 @@ std::pair<std::vector<int>, std::vector<int>> BytePairEncodingCore::encode_nativ
     return std::make_pair(tokens, segment_ids);
 }
 
-std::string BytePairEncodingCore::decode_native(const std::vector<int>& input_tokens_to_decode) {
+std::string BytePairEncodingCore::decode_native(const std::vector<int> &input_tokens_to_decode)
+{
     std::stringstream decoded_string;
 
-    for (const int token_id : input_tokens_to_decode) {
+    for (const int token_id: input_tokens_to_decode) {
         auto special_token = std::find_if(special_token_mappings_.begin(), special_token_mappings_.end(),
-                                          [token_id](const auto& pair) { return pair.second == token_id; });
+                                          [token_id](const auto &pair) { return pair.second == token_id; });
 
         if (special_token != special_token_mappings_.end()) {
             decoded_string << special_token->first;
         } else {
-            for (const auto& byte_pair : byte_pair_ranks_) {
+            for (const auto &byte_pair: byte_pair_ranks_) {
                 if (byte_pair.second == token_id) {
                     decoded_string << std::string(byte_pair.first.begin(), byte_pair.first.end());
                     break;

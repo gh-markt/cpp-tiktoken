@@ -23,6 +23,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <functional>
 #include "pcre2_regex.h"
 
 class BytePairEncodingCore {

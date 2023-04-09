@@ -21,11 +21,13 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <filesystem>
 
 std::vector<std::string> EmbeddedResourceReader::readEmbeddedResourceAsLines(const std::string& resourceName) {
-    std::ifstream file(resourceName);
+    std::filesystem::path resource_path = std::filesystem::path("tokenizers") / resourceName;
+    std::ifstream file(resource_path);
     if (!file.is_open()) {
-        throw std::runtime_error("Embedded resource '" + resourceName + "' not found.");
+        throw std::runtime_error("Embedded resource '" + resource_path.string() + "' not found.");
     }
 
     std::string line;

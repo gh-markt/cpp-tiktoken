@@ -36,12 +36,10 @@ template<typename T> std::vector<T> BytePairEncodingCore::byte_pair_merge(const 
 {
     std::vector<std::pair<int, int>> partitions(piece.size() + 1);
 
-    // Initialize partitions with (i, max_int) values
     for (size_t i = 0; i <= piece.size(); ++i) {
         partitions[i] = {static_cast<int>(i), std::numeric_limits<int>::max()};
     }
 
-    // Helper function to get rank
     auto get_rank = [&piece, &partitions, &ranks](size_t idx, int skip) -> std::optional<int> {
         if (idx + skip + 2 >= partitions.size()) {
             return std::nullopt;

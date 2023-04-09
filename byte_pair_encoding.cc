@@ -20,6 +20,7 @@
 #include <sstream>
 #include <optional>
 #include <limits>
+#include "pcre2_regex.h"
 
 BytePairEncodingCore::BytePairEncodingCore(
         const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &byte_pair_ranks,

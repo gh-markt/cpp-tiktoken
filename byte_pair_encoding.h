@@ -24,7 +24,8 @@
 #include <unordered_set>
 #include <functional>
 #include <memory>
-#include "pcre2_regex.h"
+
+class PCRERegex;
 
 class BytePairEncodingCore {
 public:

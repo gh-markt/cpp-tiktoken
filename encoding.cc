@@ -17,9 +17,9 @@
  */
 #include "encoding.h"
 #include "modelparams.h"
+#include "pcre2_regex.h"
 
 #include <stdexcept>
-#include "pcre2_regex.h"
 
 
 GptEncoding::GptEncoding(const std::string& pattern_string,

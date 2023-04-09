@@ -30,9 +30,9 @@ BytePairEncodingCore::BytePairEncodingCore(
                                                             pattern_string_(pattern_string)
 {}
 
-template<typename T> std::vector<T> BytePairEncodingCore::byte_pair_merge(const std::vector<uint8_t> &piece,
+std::vector<int> BytePairEncodingCore::byte_pair_merge(const std::vector<uint8_t> &piece,
                                                                           const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &ranks,
-                                                                          std::function<T(int, int)> f)
+                                                                          std::function<int(int, int)> f)
 {
     std::vector<std::pair<int, int>> partitions(piece.size() + 1);
 
@@ -82,7 +82,7 @@ template<typename T> std::vector<T> BytePairEncodingCore::byte_pair_merge(const 
         }
     }
 
-    std::vector<T> output;
+    std::vector<int> output;
     output.reserve(partitions.size() - 1);
     for (size_t i = 0; i < partitions.size() - 1; ++i) {
         output.push_back(f(partitions[i].first, partitions[i + 1].first));
@@ -111,7 +111,7 @@ std::pair<std::vector<int>, std::vector<int>> BytePairEncodingCore::encode_nativ
                     segment_ids.push_back(0);
                 }
             } else {
-                auto byte_pairs = byte_pair_merge<int>(utf8_encoded, byte_pair_ranks_, [&](int start, int end) {
+                auto byte_pairs = byte_pair_merge(utf8_encoded, byte_pair_ranks_, [&](int start, int end) {
                     std::vector<uint8_t> key(utf8_encoded.begin() + start, utf8_encoded.begin() + end);
                     return byte_pair_ranks_[key];
                 });

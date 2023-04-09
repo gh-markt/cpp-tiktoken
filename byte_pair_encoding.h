@@ -38,9 +38,9 @@ public:
     std::string decode_native(const std::vector<int> &input_tokens_to_decode);
 
 private:
-    template<typename T> static std::vector<T> byte_pair_merge(const std::vector<uint8_t> &piece,
+    static std::vector<int> byte_pair_merge(const std::vector<uint8_t> &piece,
                                                                const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &ranks,
-                                                               std::function<T(int, int)> f);
+                                                               std::function<int(int, int)> f);
 
     std::unordered_map<std::vector<uint8_t>, int, VectorHash> byte_pair_ranks_;
     std::unordered_map<std::string, int> special_token_mappings_;

@@ -27,29 +27,14 @@
 #include <pcre2.h>
 
 struct VectorHash {
-    std::size_t operator()(const std::vector<uint8_t> &v) const
-    {
-        std::hash<uint8_t> hasher;
+    template<typename T>
+    std::size_t operator()(const std::vector<T>& v) const {
+        std::hash<T> hasher;
         std::size_t seed = 0;
-
-        for (const auto &elem: v) {
+        for (const auto& elem : v) {
             seed ^= hasher(elem) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         }
-
         return seed;
-    }
-
-    bool operator()(const std::vector<uint8_t> &a, const std::vector<uint8_t> &b) const
-    {
-        if (a.size() != b.size()) {
-            return false;
-        }
-        for (unsigned i = 0; i < a.size(); i++) {
-            if (a[i] != b[i]) {
-                return false;
-            }
-        }
-        return true;
     }
 };
 

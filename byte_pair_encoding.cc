@@ -84,7 +84,7 @@ std::pair<std::vector<int>, std::vector<int>> BytePairEncodingCore::encode_nativ
 {
     std::vector<int> tokens;
     std::vector<int> segment_ids;
-    auto matches = pattern_string_->all_matches_values(line_to_encode);
+    auto matches = pattern_string_->get_all_matches(line_to_encode);
     for (auto token: matches) {
         auto special_mapping = special_token_mappings_.find(token);
         if (special_mapping != special_token_mappings_.end() && allowed_special.count(token) > 0) {

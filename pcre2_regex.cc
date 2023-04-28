@@ -47,10 +47,10 @@ PCRERegex::~PCRERegex()
     }
 }
 
-std::vector<std::string> PCRERegex::all_matches_values(const std::string &text) const
+std::vector<std::string> PCRERegex::get_all_matches(const std::string &text) const
 {
     std::vector<std::string> matches;
-    auto pairs = get_all_matches(text);
+    auto pairs = all_matches(text);
     for(auto &x:pairs) {
         matches.emplace_back(text.substr(x.first, x.second));
     }
@@ -61,7 +61,7 @@ void PCRERegex::replace_all(std::string &text, const std::string &replacement) c
 {
     std::string result;
     std::string::size_type last = 0;
-    auto pairs = get_all_matches(text);
+    auto pairs = all_matches(text);
     for(auto &x:pairs) {
         if (x.first >= last) {
             result.append(text.substr(last, x.first - last));
@@ -74,7 +74,7 @@ void PCRERegex::replace_all(std::string &text, const std::string &replacement) c
 }
 
 
-std::vector<std::pair<std::string::size_type, std::string::size_type>> PCRERegex::get_all_matches(const std::string &text) const
+std::vector<std::pair<std::string::size_type, std::string::size_type>> PCRERegex::all_matches(const std::string &text) const
 {
     std::vector<std::pair<std::string::size_type, std::string::size_type>> result;
     auto text_ptr = reinterpret_cast<PCRE2_SPTR8>(text.c_str());

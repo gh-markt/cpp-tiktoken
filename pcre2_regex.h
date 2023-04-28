@@ -33,8 +33,8 @@ public:
     PCRERegex(const PCRERegex &) = delete;
     ~PCRERegex();
 
-    [[nodiscard]] std::vector<std::string> all_matches_values(const std::string &text) const;
-    [[nodiscard]] std::vector<std::pair<std::string::size_type, std::string::size_type>> get_all_matches(const std::string &text) const;
+    [[nodiscard]] std::vector<std::string> get_all_matches(const std::string &text) const;
+    [[nodiscard]] std::vector<std::pair<std::string::size_type, std::string::size_type>> all_matches(const std::string &text) const;
     void replace_all(std::string &text, const std::string &replacement) const;
 private:
     pcre2_code_8 *regex_ = nullptr;

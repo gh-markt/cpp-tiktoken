@@ -47,7 +47,7 @@ PCRERegex::~PCRERegex()
     }
 }
 
-std::vector<std::string> PCRERegex::all_matches(const std::string &text) const
+std::vector<std::string> PCRERegex::all_matches_values(const std::string &text) const
 {
     std::vector<std::string> matches;
     auto pairs = get_all_matches(text);

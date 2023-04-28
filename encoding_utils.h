@@ -18,9 +18,9 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
-#include <string>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #define PCRE2_CODE_UNIT_WIDTH 0
 
@@ -28,10 +28,11 @@
 
 struct VectorHash {
     template<typename T>
-    std::size_t operator()(const std::vector<T>& v) const {
+    std::size_t operator()(const std::vector<T> &v) const
+    {
         std::hash<T> hasher;
         std::size_t seed = 0;
-        for (const auto& elem : v) {
+        for (const auto &elem: v) {
             seed ^= hasher(elem) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         }
         return seed;
@@ -41,4 +42,3 @@ struct VectorHash {
 namespace base64 {
 std::vector<uint8_t> decode(const std::string &input);
 }
-

@@ -18,10 +18,10 @@
 #include "emdedded_resource_reader.h"
 #include "encoding_utils.h"
 
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
-#include <filesystem>
 
 std::vector<std::string> EmbeddedResourceReader::readEmbeddedResourceAsLines(const std::string &resourceName)
 {

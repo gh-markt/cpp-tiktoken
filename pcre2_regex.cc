@@ -18,68 +18,75 @@
 #include "pcre2_regex.h"
 #include <stdexcept>
 
-PCRERegex::PCRERegex(const std::string& pattern, int flags) {
+PCRERegex::PCRERegex(const std::string &pattern, int flags)
+{
     int error = 0;
     PCRE2_SIZE error_offset = 0;
     flags |= PCRE2_UCP | PCRE2_UTF;
     regex_ = pcre2_compile_8(reinterpret_cast<PCRE2_SPTR8>(pattern.c_str()), pattern.size(),
-                             static_cast<uint32_t>(flags), &error, &error_offset, nullptr);
+        static_cast<uint32_t>(flags), &error, &error_offset, nullptr);
     if (!regex_) {
         char buffer[512];
-        pcre2_get_error_message_8(error, reinterpret_cast<PCRE2_UCHAR8*>(buffer), sizeof(buffer));
+        pcre2_get_error_message_8(error, reinterpret_cast<PCRE2_UCHAR8 *>(buffer), sizeof(buffer));
         throw std::runtime_error(buffer);
     }
 }
 
-PCRERegex::PCRERegex(const std::string& pattern) : PCRERegex(pattern, 0) {}
+PCRERegex::PCRERegex(const std::string &pattern) :
+    PCRERegex(pattern, 0) { }
 
-PCRERegex::~PCRERegex() {
+PCRERegex::~PCRERegex()
+{
     pcre2_code_free_8(regex_);
 }
 
-std::vector<std::string> PCRERegex::all_matches(const std::string& text) const {
+std::vector<std::string> PCRERegex::all_matches(const std::string &text) const
+{
     std::vector<std::string> matches;
-    auto text_ptr = reinterpret_cast<PCRE2_SPTR8>(text.c_str());
-    PCRE2_SIZE text_length = text.size();
-    pcre2_match_data_8* match_data = pcre2_match_data_create_from_pattern_8(regex_, nullptr);
-    int start_offset = 0;
-    int match_length;
-    int rc;
-    do {
-        rc = pcre2_match_8(regex_, text_ptr, text_length, start_offset, 0, match_data, nullptr);
-        if (rc >= 0) {
-            PCRE2_SIZE* o_vec = pcre2_get_ovector_pointer_8(match_data);
-            PCRE2_SPTR8 match_ptr = text_ptr + o_vec[0];
-            match_length = static_cast<int>(o_vec[1] - o_vec[0]);
-            matches.emplace_back(reinterpret_cast<const char*>(match_ptr), match_length);
-            start_offset = static_cast<int>(o_vec[1]);
-        }
-    } while (rc >= 0 && start_offset < text_length && match_length > 0);
-    pcre2_match_data_free_8(match_data);
+    auto pairs = get_all_matches(text);
+    for(auto &x:pairs) {
+        matches.emplace_back(text.substr(x.first, x.second));
+    }
     return matches;
 }
 
-void PCRERegex::replace_all(std::string& text, const std::string& replacement) const {
+void PCRERegex::replace_all(std::string &text, const std::string &replacement) const
+{
+    std::string result;
+    std::string::size_type last = 0;
+    auto pairs = get_all_matches(text);
+    for(auto &x:pairs) {
+        if (x.first >= last) {
+            result.append(text.substr(last, x.first - last));
+            result.append(replacement);
+            last = x.first + x.second;
+        }
+    }
+    result.append(text.substr(last));
+    text = result;
+}
+
+
+std::vector<std::pair<std::string::size_type, std::string::size_type>> PCRERegex::get_all_matches(const std::string &text) const
+{
+    std::vector<std::pair<std::string::size_type, std::string::size_type>> result;
     auto text_ptr = reinterpret_cast<PCRE2_SPTR8>(text.c_str());
     PCRE2_SIZE text_length = text.size();
-    pcre2_match_data_8* match_data = pcre2_match_data_create_from_pattern_8(regex_, nullptr);
+    pcre2_match_data_8 *match_data = pcre2_match_data_create_from_pattern_8(regex_, nullptr);
     int start_offset = 0;
     int match_length;
     int rc;
-    std::string result;
-    size_t last_pos = 0;
     do {
         rc = pcre2_match_8(regex_, text_ptr, text_length, start_offset, 0, match_data, nullptr);
         if (rc >= 0) {
-            PCRE2_SIZE* o_vec = pcre2_get_ovector_pointer_8(match_data);
+            PCRE2_SIZE *o_vec = pcre2_get_ovector_pointer_8(match_data);
             match_length = static_cast<int>(o_vec[1] - o_vec[0]);
-            result.append(text, last_pos, o_vec[0] - last_pos);
-            result.append(replacement);
-            last_pos = o_vec[1];
+            result.emplace_back(o_vec[0], match_length);
             start_offset = static_cast<int>(o_vec[1]);
         }
     } while (rc >= 0 && start_offset < text_length && match_length > 0);
-    result.append(text, last_pos, text_length - last_pos);
-    text = std::move(result);
     pcre2_match_data_free_8(match_data);
+    return result;
+
 }
+

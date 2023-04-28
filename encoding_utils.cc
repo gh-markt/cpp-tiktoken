@@ -37,9 +37,9 @@ std::vector<uint8_t> decode(const std::string &data)
     std::vector<uint8_t> ret;
 
     for (i = 0; i < len; ++i) {
-        c = (char) cvt.find(data[i]);
+        c = (char)cvt.find(data[i]);
         ++i;
-        c1 = (char) cvt.find(data[i]);
+        c1 = (char)cvt.find(data[i]);
         c = (c << 2) | ((c1 >> 4) & 0x3);
         ret.push_back(c);
         if (++i < len) {
@@ -47,7 +47,7 @@ std::vector<uint8_t> decode(const std::string &data)
             if (fillchar == c) {
                 break;
             }
-            c = (char) cvt.find(c);
+            c = (char)cvt.find(c);
             c1 = ((c1 << 4) & 0xf0) | ((c >> 2) & 0xf);
             ret.push_back(c1);
         }
@@ -56,7 +56,7 @@ std::vector<uint8_t> decode(const std::string &data)
             if (fillchar == c1) {
                 break;
             }
-            c1 = (char) cvt.find(c1);
+            c1 = (char)cvt.find(c1);
             c = ((c << 6) & 0xc0) | c1;
             ret.push_back(c);
         }
@@ -64,5 +64,4 @@ std::vector<uint8_t> decode(const std::string &data)
     return (ret);
 }
 
-} // base64
-
+} // namespace base64

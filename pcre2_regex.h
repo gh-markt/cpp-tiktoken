@@ -17,23 +17,27 @@
  */
 #pragma once
 
+#include <cstring>
 #include <string>
 #include <vector>
-#include <cstring>
 
 #define PCRE2_CODE_UNIT_WIDTH 0
 
 #include <pcre2.h>
 
 class PCRERegex {
-    pcre2_code_8* regex_ = nullptr;
-
 public:
-    PCRERegex(const std::string& pattern, int flags);
-    explicit PCRERegex(const std::string& pattern);
-    PCRERegex(const PCRERegex& ) = delete;
+    PCRERegex(const std::string &pattern, int flags);
+    explicit PCRERegex(const std::string &pattern);
+    PCRERegex(PCRERegex &&) = default;
+    PCRERegex(const PCRERegex &) = delete;
     ~PCRERegex();
 
-    [[nodiscard]] std::vector<std::string> all_matches(const std::string& text) const;
-    void replace_all(std::string& text, const std::string& replacement) const;
+    [[nodiscard]] std::vector<std::string> all_matches(const std::string &text) const;
+    [[nodiscard]] std::vector<std::pair<std::string::size_type, std::string::size_type>> get_all_matches(const std::string &text) const;
+    void replace_all(std::string &text, const std::string &replacement) const;
+private:
+    pcre2_code_8 *regex_ = nullptr;
+
+
 };

@@ -25,8 +25,8 @@
 class ModelParams {
 public:
     ModelParams(int explicit_n_vocab, const std::string &pat_str,
-                const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &mergeable_ranks,
-                const std::unordered_map<std::string, int> &special_tokens);
+        const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &mergeable_ranks,
+        const std::unordered_map<std::string, int> &special_tokens);
 
     int explicit_n_vocab() const;
     std::string pat_str() const;
@@ -41,7 +41,10 @@ private:
 };
 
 enum class LanguageModel {
-    CL100K_BASE, R50K_BASE, P50K_BASE, P50K_EDIT
+    CL100K_BASE,
+    R50K_BASE,
+    P50K_BASE,
+    P50K_EDIT
 };
 
 class ModelParamsGenerator {

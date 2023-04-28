@@ -35,9 +35,16 @@ PCRERegex::PCRERegex(const std::string &pattern, int flags)
 PCRERegex::PCRERegex(const std::string &pattern) :
     PCRERegex(pattern, 0) { }
 
+PCRERegex::PCRERegex(PCRERegex && other):regex_(other.regex_)
+{
+    other.regex_ = nullptr;
+}
+
 PCRERegex::~PCRERegex()
 {
-    pcre2_code_free_8(regex_);
+    if (regex_) {
+        pcre2_code_free_8(regex_);
+    }
 }
 
 std::vector<std::string> PCRERegex::all_matches(const std::string &text) const

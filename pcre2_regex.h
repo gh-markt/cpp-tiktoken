@@ -29,7 +29,7 @@ class PCRERegex {
 public:
     PCRERegex(const std::string &pattern, int flags);
     explicit PCRERegex(const std::string &pattern);
-    PCRERegex(PCRERegex &&) = default;
+    PCRERegex(PCRERegex &&);
     PCRERegex(const PCRERegex &) = delete;
     ~PCRERegex();
 

@@ -63,16 +63,13 @@ void PCRERegex::replace_all(std::string &text, const std::string &replacement) c
     std::string::size_type last = 0;
     auto pairs = all_matches(text);
     for(auto &x:pairs) {
-        if (x.first >= last) {
-            result.append(text.substr(last, x.first - last));
-            result.append(replacement);
-            last = x.first + x.second;
-        }
+        result.append(text.substr(last, x.first - last));
+        last = x.first + x.second;
+        result.append(replacement);
     }
     result.append(text.substr(last));
     text = result;
 }
-
 
 std::vector<std::pair<std::string::size_type, std::string::size_type>> PCRERegex::all_matches(const std::string &text) const
 {
@@ -94,6 +91,5 @@ std::vector<std::pair<std::string::size_type, std::string::size_type>> PCRERegex
     } while (rc >= 0 && start_offset < text_length && match_length > 0);
     pcre2_match_data_free_8(match_data);
     return result;
-
 }
 

@@ -55,3 +55,7 @@ std::string GptEncoding::decode(const std::vector<int> &input_tokens_to_decode)
     // Call the decode_native function from the BytePairEncodingCore class
     return byte_pair_encoding_core_processor_.decode_native(input_tokens_to_decode);
 }
+
+const std::unordered_map<std::vector<uint8_t>, int, VectorHash>& GptEncoding::get_byte_pair_token_map() const {
+    return byte_pair_encoding_core_processor_.getBytePairRanks();
+}

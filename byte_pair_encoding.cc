@@ -130,3 +130,7 @@ std::string BytePairEncodingCore::decode_native(const std::vector<int> &input_to
     }
     return decoded_string.str();
 }
+
+const std::unordered_map<std::vector<uint8_t>, int, VectorHash>& BytePairEncodingCore::getBytePairRanks() const {
+    return byte_pair_ranks_;
+}

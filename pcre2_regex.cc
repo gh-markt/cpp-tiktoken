@@ -71,6 +71,10 @@ void PCRERegex::replace_all(std::string &text, const std::string &replacement) c
     text = result;
 }
 
+bool PCRERegex::contains(const std::string& text) const {
+    return !all_matches(text).empty();
+}
+
 std::vector<std::pair<std::string::size_type, std::string::size_type>> PCRERegex::all_matches(const std::string &text) const
 {
     std::vector<std::pair<std::string::size_type, std::string::size_type>> result;
@@ -92,4 +96,3 @@ std::vector<std::pair<std::string::size_type, std::string::size_type>> PCRERegex
     pcre2_match_data_free_8(match_data);
     return result;
 }
-

@@ -35,4 +35,6 @@ public:
     std::vector<int> encode(const std::string &line_to_encode, const std::unordered_set<std::string> &allowed_special = {},
         const std::unordered_set<std::string> &disallowed_special = { "all" });
     std::string decode(const std::vector<int> &input_tokens_to_decode);
+
+    [[nodiscard]] const std::unordered_map<std::vector<uint8_t>, int, VectorHash>& get_byte_pair_token_map() const;
 };

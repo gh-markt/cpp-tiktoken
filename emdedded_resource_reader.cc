@@ -23,9 +23,32 @@
 #include <sstream>
 #include <stdexcept>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <limits.h>
+#include <unistd.h>
+#endif
+
+std::filesystem::path get_exe_parent_path_intern() {
+    std::filesystem::path path;
+#ifdef _WIN32
+    wchar_t result[MAX_PATH] = {0};
+    GetModuleFileNameW(nullptr, result, MAX_PATH);
+    path = std::filesystem::path(result);
+#else
+    char result[PATH_MAX];
+    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+    path = std::filesystem::path(std::string(result, count > 0 ? count : 0));
+#endif
+    return path.parent_path();
+}
+
+const std::filesystem::path exe_parent_path = get_exe_parent_path_intern();
+
 std::vector<std::string> EmbeddedResourceReader::readEmbeddedResourceAsLines(const std::string &resourceName)
 {
-    std::filesystem::path resource_path = std::filesystem::path("tokenizers") / resourceName;
+    std::filesystem::path resource_path = exe_parent_path / "tokenizers" / resourceName;
     std::ifstream file(resource_path);
     if (!file.is_open()) {
         throw std::runtime_error("Embedded resource '" + resource_path.string() + "' not found.");

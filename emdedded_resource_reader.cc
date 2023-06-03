@@ -30,6 +30,8 @@
 #include <unistd.h>
 #endif
 
+namespace {
+
 std::filesystem::path get_exe_parent_path_intern() {
     std::filesystem::path path;
 #ifdef _WIN32
@@ -44,6 +46,7 @@ std::filesystem::path get_exe_parent_path_intern() {
     return path.parent_path();
 }
 
+}
 const std::filesystem::path exe_parent_path = get_exe_parent_path_intern();
 
 std::vector<std::string> EmbeddedResourceReader::readEmbeddedResourceAsLines(const std::string &resourceName)

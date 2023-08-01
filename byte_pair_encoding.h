@@ -44,6 +44,7 @@ public:
     std::pair<std::vector<int>, std::vector<int>> encode_native(const std::string &line_to_encode,
         const std::unordered_set<std::string> &allowed_special);
     std::string decode_native(const std::vector<int> &input_tokens_to_decode);
+    std::vector<std::string> break_into_specials(std::string const& line_to_encode, const std::unordered_set<std::string> &allowed_special);
 
     [[nodiscard]] const std::unordered_map<std::vector<uint8_t>, int, VectorHash>& getBytePairRanks() const;
 };

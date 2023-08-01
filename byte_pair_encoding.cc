@@ -93,6 +93,7 @@ std::vector<std::string> BytePairEncodingCore::break_into_specials(std::string c
     }
     std::sort(separator_offsets.begin(), separator_offsets.end());
     std::vector<std::string> lines;
+    pos = 0;
     for (auto [begin, end]: separator_offsets) {
         lines.push_back(line_to_encode.substr(pos, begin - pos));
         lines.push_back(line_to_encode.substr(begin, end - begin));

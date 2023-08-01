@@ -31,4 +31,4 @@ You can decode a vector of tokens back into its original string with
         auto string_value = encoder->decode(tokens)
 
 If you like this project, and find it useful, you are invited to make a donation of whatever amount you believe
-is appropriate via paypal to markt@nerdflat.com.  There is absolutely no obligation to donate.
+is appropriate via paypal to markt AT nerdflat.com.  There is absolutely no obligation to donate.

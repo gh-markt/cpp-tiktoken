@@ -89,11 +89,13 @@ std::vector<std::string> BytePairEncodingCore::break_into_specials(std::string c
                 separator_offsets.push_back({ pos, pos + sep.first.size() });
                 pos += sep.first.size();
             }
+            pos = 0;
+        } else if (allowed_special.count("")) {
+            separator_offsets.push_back({ 0, 0 });
         }
     }
     std::sort(separator_offsets.begin(), separator_offsets.end());
     std::vector<std::string> lines;
-    pos = 0;
     for (auto [begin, end]: separator_offsets) {
         lines.push_back(line_to_encode.substr(pos, begin - pos));
         lines.push_back(line_to_encode.substr(begin, end - begin));
@@ -119,8 +121,10 @@ std::pair<std::vector<int>, std::vector<int>> BytePairEncodingCore::encode_nativ
             for (auto token: matches) {
                 auto special_mapping = special_token_mappings_.find(token);
                 if (special_mapping != special_token_mappings_.end() && allowed_special.count(token) > 0) {
-                    tokens.push_back(special_mapping->second);
-                    segment_ids.push_back(0);
+                    if (!token.empty()) {
+                        tokens.push_back(special_mapping->second);
+                        segment_ids.push_back(0);
+                    }
                 } else {
                     std::vector<uint8_t> utf8_encoded(token.begin(), token.end());
                     if (utf8_encoded.size() == 1) {

@@ -28,9 +28,9 @@ GptEncoding::GptEncoding(const std::string &pattern_string, const std::unordered
     byte_pair_encoding_core_processor_(byte_pair_ranks, special_token_mappings,
         std::make_shared<PCRERegex>(pattern_string, PCRE2_CASELESS)) { }
 
-std::shared_ptr<GptEncoding> GptEncoding::get_encoding(LanguageModel model)
+std::shared_ptr<GptEncoding> GptEncoding::get_encoding(IModelGetter& model_getter)
 {
-    ModelParams model_params = ModelParamsGenerator::get_model_params(model);
+    ModelParams model_params = model_getter.get();
     return std::make_shared<GptEncoding>(model_params.pat_str(), model_params.mergeable_ranks(),
         model_params.special_tokens(), model_params.explicit_n_vocab());
 }
@@ -58,4 +58,13 @@ std::string GptEncoding::decode(const std::vector<int> &input_tokens_to_decode)
 
 const std::unordered_map<std::vector<uint8_t>, int, VectorHash>& GptEncoding::get_byte_pair_token_map() const {
     return byte_pair_encoding_core_processor_.getBytePairRanks();
+}
+
+EnumModelGetter::EnumModelGetter(LanguageModel model) 
+    : model_(model)
+{
+}
+
+ModelParams EnumModelGetter::get() {
+    return ModelParamsGenerator::get_model_params(model_);
 }

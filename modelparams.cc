@@ -52,17 +52,17 @@ std::unordered_map<std::string, int> ModelParams::special_tokens() const
 
 // ModelParamsGenerator member functions
 
-ModelParams ModelParamsGenerator::get_model_params(LanguageModel model)
+ModelParams ModelParamsGenerator::get_model_params(LanguageModel model, IResourceReader* resource_reader)
 {
     switch (model) {
         case LanguageModel::CL100K_BASE:
-            return cl100k_base();
+            return cl100k_base(resource_reader);
         case LanguageModel::P50K_BASE:
-            return p50k_base();
+            return p50k_base(resource_reader);
         case LanguageModel::P50K_EDIT:
-            return p50k_edit();
+            return p50k_edit(resource_reader);
         case LanguageModel::R50K_BASE:
-            return r50k_base();
+            return r50k_base(resource_reader);
     }
     throw std::runtime_error("Invalid argument to get_model_params");
 }
@@ -77,23 +77,26 @@ static auto constexpr cl100k_pattern = "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p
 static auto constexpr p50k_pattern = "'s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+";
 #endif
 
-ModelParams ModelParamsGenerator::r50k_base()
+ModelParams ModelParamsGenerator::r50k_base(IResourceReader* resource_reader) 
 {
-    auto mergeableRanks = EmbeddedResourceReader::loadTokenBytePairEncoding("r50k_base.tiktoken");
+    EmbeddedResourceLoader loader("r50k_base.tiktoken", resource_reader);
+    auto mergeableRanks = loader.loadTokenBytePairEncoding();
 
     return ModelParams(50257, p50k_pattern, mergeableRanks, { { EndOfText, 50256 } });
 }
 
-ModelParams ModelParamsGenerator::p50k_base()
+ModelParams ModelParamsGenerator::p50k_base(IResourceReader* resource_reader)
 {
-    auto mergeableRanks = EmbeddedResourceReader::loadTokenBytePairEncoding("p50k_base.tiktoken");
+    EmbeddedResourceLoader loader("p50k_base.tiktoken", resource_reader);
+    auto mergeableRanks = loader.loadTokenBytePairEncoding();
 
     return ModelParams(50281, p50k_pattern, mergeableRanks, { { EndOfText, 50256 } });
 }
 
-ModelParams ModelParamsGenerator::p50k_edit()
+ModelParams ModelParamsGenerator::p50k_edit(IResourceReader* resource_reader)
 {
-    auto mergeableRanks = EmbeddedResourceReader::loadTokenBytePairEncoding("p50k_base.tiktoken");
+    EmbeddedResourceLoader loader("p50k_base.tiktoken", resource_reader);
+    auto mergeableRanks = loader.loadTokenBytePairEncoding();
 
     std::unordered_map<std::string, int> specialTokens = { { EndOfText, 50256 }, { FimPrefix, 50281 }, { FimMiddle, 50282 },
         { FimSuffix, 50283 } };
@@ -101,9 +104,11 @@ ModelParams ModelParamsGenerator::p50k_edit()
     return ModelParams(0, p50k_pattern, mergeableRanks, specialTokens);
 }
 
-ModelParams ModelParamsGenerator::cl100k_base()
+ModelParams ModelParamsGenerator::cl100k_base(IResourceReader* resource_reader)
 {
-    auto mergeableRanks = EmbeddedResourceReader::loadTokenBytePairEncoding("cl100k_base.tiktoken");
+    EmbeddedResourceLoader loader("cl100k_base.tiktoken", resource_reader);
+    auto mergeableRanks = loader.loadTokenBytePairEncoding();
+
     std::unordered_map<std::string, int> specialTokens = { { EndOfText, 100257 }, { FimPrefix, 100258 }, { FimMiddle, 100259 },
         { FimSuffix, 100260 }, { EndOfPrompt, 100276 } };
 

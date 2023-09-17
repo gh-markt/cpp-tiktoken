@@ -28,9 +28,9 @@ GptEncoding::GptEncoding(const std::string &pattern_string, const std::unordered
     byte_pair_encoding_core_processor_(byte_pair_ranks, special_token_mappings,
         std::make_shared<PCRERegex>(pattern_string, PCRE2_CASELESS)) { }
 
-std::shared_ptr<GptEncoding> GptEncoding::get_encoding(LanguageModel model)
+std::shared_ptr<GptEncoding> GptEncoding::get_encoding(LanguageModel model, IResourceReader* resource_reader)
 {
-    ModelParams model_params = ModelParamsGenerator::get_model_params(model);
+    ModelParams model_params = ModelParamsGenerator::get_model_params(model, resource_reader);
     return std::make_shared<GptEncoding>(model_params.pat_str(), model_params.mergeable_ranks(),
         model_params.special_tokens(), model_params.explicit_n_vocab());
 }

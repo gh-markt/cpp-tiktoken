@@ -20,6 +20,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 
@@ -49,9 +50,13 @@ std::filesystem::path get_exe_parent_path_intern() {
 }
 const std::filesystem::path exe_parent_path = get_exe_parent_path_intern();
 
-std::vector<std::string> EmbeddedResourceReader::readEmbeddedResourceAsLines(const std::string &resourceName)
+EmbeddedResourceReader::EmbeddedResourceReader(const std::string& resourceName) 
+    : resourceName_(resourceName)
 {
-    std::filesystem::path resource_path = exe_parent_path / "tokenizers" / resourceName;
+}
+
+std::vector<std::string> EmbeddedResourceReader::readLines() {
+    std::filesystem::path resource_path = exe_parent_path / "tokenizers" / resourceName_;
     std::ifstream file(resource_path);
     if (!file.is_open()) {
         throw std::runtime_error("Embedded resource '" + resource_path.string() + "' not found.");
@@ -66,10 +71,23 @@ std::vector<std::string> EmbeddedResourceReader::readEmbeddedResourceAsLines(con
     return lines;
 }
 
-std::unordered_map<std::vector<uint8_t>, int, VectorHash>
-EmbeddedResourceReader::loadTokenBytePairEncoding(const std::string &dataSourceName)
+EmbeddedResourceLoader::EmbeddedResourceLoader(const std::string& dataSourceName, IResourceReader* reader)
+    : resourceReader_(reader)
+    , dataSourceName_(dataSourceName)
 {
-    auto lines = readEmbeddedResourceAsLines(dataSourceName);
+}
+
+std::vector<std::string> EmbeddedResourceLoader::readEmbeddedResourceAsLines() {
+    if (!!resourceReader_) {
+        return resourceReader_->readLines();
+    }
+    return EmbeddedResourceReader(dataSourceName_).readLines();
+}
+
+std::unordered_map<std::vector<uint8_t>, int, VectorHash>
+EmbeddedResourceLoader::loadTokenBytePairEncoding()
+{
+    auto lines = readEmbeddedResourceAsLines();
     std::unordered_map<std::vector<uint8_t>, int, VectorHash> token_byte_pair_encoding;
 
     for (const auto &line: lines) {

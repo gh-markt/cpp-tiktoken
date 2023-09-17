@@ -47,9 +47,11 @@ enum class LanguageModel {
     P50K_EDIT
 };
 
+class IResourceReader;
+
 class ModelParamsGenerator {
 public:
-    static ModelParams get_model_params(LanguageModel model);
+    static ModelParams get_model_params(LanguageModel model, IResourceReader* resource_reader = nullptr);
     static auto constexpr EndOfText = "<|endoftext|>";
     static auto constexpr FimPrefix = "<|fim_prefix|>";
     static auto constexpr FimMiddle = "<|fim_middle|>";
@@ -57,8 +59,8 @@ public:
     static auto constexpr EndOfPrompt = "<|endofprompt|>";
 
 private:
-    static ModelParams r50k_base();
-    static ModelParams p50k_base();
-    static ModelParams p50k_edit();
-    static ModelParams cl100k_base();
+    static ModelParams r50k_base(IResourceReader* resource_reader = nullptr);
+    static ModelParams p50k_base(IResourceReader* resource_reader = nullptr);
+    static ModelParams p50k_edit(IResourceReader* resource_reader = nullptr);
+    static ModelParams cl100k_base(IResourceReader* resource_reader = nullptr);
 };

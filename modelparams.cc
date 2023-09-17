@@ -17,7 +17,6 @@
  */
 #include "modelparams.h"
 #include "emdedded_resource_reader.h"
-#include "encoding.h"
 #include <stdexcept>
 
 // ModelParams constructor and member functions

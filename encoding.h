@@ -23,7 +23,6 @@
 #include <unordered_set>
 #include <vector>
 
-class GptEncoding;
 class IResourceReader;
 
 class GptEncoding {

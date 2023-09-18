@@ -33,10 +33,18 @@ private:
 TEST(TestGetEncoding, TestDefaultEncod)
 {
     auto encoder = GptEncoding::get_encoding(LanguageModel::CL100K_BASE);
+    std::vector<int> tokens = encoder->encode("hello world");
+    ASSERT_EQ(tokens.size(), 2);
+    ASSERT_EQ(tokens[0], 15339);
+    ASSERT_EQ(tokens[1], 1917);
 }
 
 TEST(TestGetEncoding, TestCustomResourceReader)
 {
     TFilePathResourceReader reader("../tokenizers/cl100k_base.tiktoken");
     auto encoder = GptEncoding::get_encoding(LanguageModel::CL100K_BASE, &reader);
+    std::vector<int> tokens = encoder->encode("hello world");
+    ASSERT_EQ(tokens.size(), 2);
+    ASSERT_EQ(tokens[0], 15339);
+    ASSERT_EQ(tokens[1], 1917);
 }

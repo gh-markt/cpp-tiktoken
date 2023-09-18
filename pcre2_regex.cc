@@ -17,7 +17,6 @@
  */
 #include "pcre2_regex.h"
 
-#include <memory>
 #include <stdexcept>
 
 #define PCRE2_CODE_UNIT_WIDTH 0

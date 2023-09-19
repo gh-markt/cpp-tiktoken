@@ -18,16 +18,12 @@
 #pragma once
 
 #include <cstring>
+#include <memory>
 #include <string>
 #include <vector>
 
-#define PCRE2_CODE_UNIT_WIDTH 0
-
-#include <pcre2.h>
-
 class PCRERegex {
-    pcre2_code_8 *regex_ = nullptr;
-
+    class Impl;
 public:
     PCRERegex(const std::string &pattern, int flags);
     explicit PCRERegex(const std::string &pattern);
@@ -39,4 +35,7 @@ public:
     void replace_all(std::string &text, const std::string &replacement) const;
     [[nodiscard]] bool contains(const std::string& text) const;
     [[nodiscard]] std::vector<std::pair<std::string::size_type, std::string::size_type>> all_matches(const std::string &text) const;
+
+private:
+    std::shared_ptr<Impl> impl_;
 };

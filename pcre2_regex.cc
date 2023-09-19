@@ -16,10 +16,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "pcre2_regex.h"
+
 #include <stdexcept>
 
-PCRERegex::PCRERegex(const std::string &pattern, int flags)
-{
+#define PCRE2_CODE_UNIT_WIDTH 0
+#include <pcre2.h>
+
+class PCRERegex::Impl {
+public:
+    Impl(const std::string &pattern, int flags);
+    Impl(Impl&& other);
+    ~Impl();
+
+    std::vector<std::string> get_all_matches(const std::string &text) const;
+    std::vector<std::pair<std::string::size_type, std::string::size_type>> all_matches(const std::string &text) const;
+    bool contains(const std::string& text) const;
+    void replace_all(std::string &text, const std::string &replacement) const;
+
+private:
+    pcre2_code_8 *regex_ = nullptr;
+};
+
+PCRERegex::Impl::Impl(const std::string &pattern, int flags) {
     int error = 0;
     PCRE2_SIZE error_offset = 0;
     flags |= PCRE2_UCP | PCRE2_UTF;
@@ -32,22 +50,13 @@ PCRERegex::PCRERegex(const std::string &pattern, int flags)
     }
 }
 
-PCRERegex::PCRERegex(const std::string &pattern) :
-    PCRERegex(pattern, 0) { }
-
-PCRERegex::PCRERegex(PCRERegex && other):regex_(other.regex_)
-{
-    other.regex_ = nullptr;
-}
-
-PCRERegex::~PCRERegex()
-{
+PCRERegex::Impl::~Impl() {
     if (regex_) {
         pcre2_code_free_8(regex_);
     }
 }
 
-std::vector<std::string> PCRERegex::get_all_matches(const std::string &text) const
+std::vector<std::string> PCRERegex::Impl::get_all_matches(const std::string &text) const 
 {
     std::vector<std::string> matches;
     auto pairs = all_matches(text);
@@ -57,25 +66,8 @@ std::vector<std::string> PCRERegex::get_all_matches(const std::string &text) con
     return matches;
 }
 
-void PCRERegex::replace_all(std::string &text, const std::string &replacement) const
-{
-    std::string result;
-    std::string::size_type last = 0;
-    auto pairs = all_matches(text);
-    for(auto &x:pairs) {
-        result.append(text.substr(last, x.first - last));
-        last = x.first + x.second;
-        result.append(replacement);
-    }
-    result.append(text.substr(last));
-    text = result;
-}
-
-bool PCRERegex::contains(const std::string& text) const {
-    return !all_matches(text).empty();
-}
-
-std::vector<std::pair<std::string::size_type, std::string::size_type>> PCRERegex::all_matches(const std::string &text) const
+std::vector<std::pair<std::string::size_type, std::string::size_type>>
+PCRERegex::Impl::all_matches(const std::string &text) const 
 {
     std::vector<std::pair<std::string::size_type, std::string::size_type>> result;
     auto text_ptr = reinterpret_cast<PCRE2_SPTR8>(text.c_str());
@@ -95,4 +87,62 @@ std::vector<std::pair<std::string::size_type, std::string::size_type>> PCRERegex
     } while (rc >= 0 && start_offset < text_length && match_length > 0);
     pcre2_match_data_free_8(match_data);
     return result;
+}
+
+bool PCRERegex::Impl::contains(const std::string& text) const 
+{
+    return !all_matches(text).empty();
+}
+
+void PCRERegex::Impl::replace_all(std::string &text, const std::string &replacement) const 
+{
+    std::string result;
+    std::string::size_type last = 0;
+    auto pairs = all_matches(text);
+    for(auto &x:pairs) {
+        result.append(text.substr(last, x.first - last));
+        last = x.first + x.second;
+        result.append(replacement);
+    }
+    result.append(text.substr(last));
+    text = result;
+}
+
+PCRERegex::PCRERegex(const std::string &pattern, int flags)
+    : impl_(std::make_shared<Impl>(pattern, flags))
+{
+}
+
+PCRERegex::PCRERegex(const std::string &pattern)
+    : impl_(std::make_shared<Impl>(pattern, 0))
+{
+}
+
+PCRERegex::PCRERegex(PCRERegex && other)
+    : impl_(std::move(other.impl_))
+{
+}
+
+PCRERegex::~PCRERegex()
+{
+}
+
+
+std::vector<std::string> PCRERegex::get_all_matches(const std::string &text) const 
+{
+    return impl_->get_all_matches(text);
+}
+
+void PCRERegex::replace_all(std::string &text, const std::string &replacement) const
+{
+    impl_->replace_all(text, replacement);
+}
+
+bool PCRERegex::contains(const std::string& text) const {
+    return impl_->contains(text);
+}
+
+std::vector<std::pair<std::string::size_type, std::string::size_type>> PCRERegex::all_matches(const std::string &text) const
+{
+    return impl_->all_matches(text);
 }

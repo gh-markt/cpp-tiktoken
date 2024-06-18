@@ -41,6 +41,7 @@ private:
 };
 
 enum class LanguageModel {
+    O200K_BASE,
     CL100K_BASE,
     R50K_BASE,
     P50K_BASE,
@@ -63,4 +64,5 @@ private:
     static ModelParams p50k_base(IResourceReader* resource_reader = nullptr);
     static ModelParams p50k_edit(IResourceReader* resource_reader = nullptr);
     static ModelParams cl100k_base(IResourceReader* resource_reader = nullptr);
+    static ModelParams o200k_base(IResourceReader* resource_reader = nullptr);
 };

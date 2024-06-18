@@ -15,6 +15,7 @@ The value returned from this function is an `std::shared_ptr` and you will not h
 
 Supported language models that you can pass as a parameter to this function are:
 
+        LanguageModel::O200K_BASE
         LanguageModel::CL100K_BASE 
         LanguageModel::R50K_BASE
         LanguageModel::P50K_BASE

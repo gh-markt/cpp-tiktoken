@@ -55,6 +55,8 @@ std::unordered_map<std::string, int> ModelParams::special_tokens() const
 ModelParams ModelParamsGenerator::get_model_params(LanguageModel model, IResourceReader* resource_reader)
 {
     switch (model) {
+        case LanguageModel::O200K_BASE:
+            return o200k_base(resource_reader);
         case LanguageModel::CL100K_BASE:
             return cl100k_base(resource_reader);
         case LanguageModel::P50K_BASE:
@@ -69,10 +71,12 @@ ModelParams ModelParamsGenerator::get_model_params(LanguageModel model, IResourc
 
 #if 0
 // latin alphabet only
+static auto constexpr o200k_pattern = "[^\\r\\na-zA-Z0-9]?[\\p{Lu}\\p{Lt}\\p{Lm}\\p{Lo}\\p{M}]*[\\p{Ll}\\p{Lm}\\p{Lo}\\p{M}]+(?i:'s|'t|'re|'ve|'m|'ll|'d)?|[^\\r\\na-zA-Z0-9]?[\\p{Lu}\\p{Lt}\\p{Lm}\\p{Lo}\\p{M}]+[\\p{Ll}\\p{Lm}\\p{Lo}\\p{M}]*(?i:'s|'t|'re|'ve|'m|'ll|'d)?|[0-9]{1,3}| ?[^\\sa-zA-Z0-9]+[\\r\\n/]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+";
 static auto constexpr cl100k_pattern = "(?:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\na-zA-Z0-9]?[a-zA-Z]+|[0-9]{1,3}| ?[^\\sa-zA-Z0-9]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+";
 static auto constexpr p50k_pattern = "'s|'t|'re|'ve|'m|'ll|'d| ?[a-zA-Z]+| ?[0-9]+| ?[^\\sa-zA-Z0-9]+|\\s+(?!\\S)|\\s+";
 #else
 // original regexes don't work with std::regex.  Need to come up with another solution to support other languages.
+static auto constexpr o200k_pattern = "[^\\r\\n\\p{L}\\p{N}]?[\\p{Lu}\\p{Lt}\\p{Lm}\\p{Lo}\\p{M}]*[\\p{Ll}\\p{Lm}\\p{Lo}\\p{M}]+(?i:'s|'t|'re|'ve|'m|'ll|'d)?|[^\\r\\n\\p{L}\\p{N}]?[\\p{Lu}\\p{Lt}\\p{Lm}\\p{Lo}\\p{M}]+[\\p{Ll}\\p{Lm}\\p{Lo}\\p{M}]*(?i:'s|'t|'re|'ve|'m|'ll|'d)?|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n/]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+";
 static auto constexpr cl100k_pattern = "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+";
 static auto constexpr p50k_pattern = "'s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+";
 #endif
@@ -113,4 +117,14 @@ ModelParams ModelParamsGenerator::cl100k_base(IResourceReader* resource_reader)
         { FimSuffix, 100260 }, { EndOfPrompt, 100276 } };
 
     return ModelParams(0, cl100k_pattern, mergeableRanks, specialTokens);
+}
+
+ModelParams ModelParamsGenerator::o200k_base(IResourceReader* resource_reader)
+{
+    EmbeddedResourceLoader loader("o200k_base.tiktoken", resource_reader);
+    auto mergeableRanks = loader.loadTokenBytePairEncoding();
+
+    std::unordered_map<std::string, int> specialTokens = { { EndOfText, 199999 }, { EndOfPrompt, 200018 } };
+
+    return ModelParams(0, o200k_pattern, mergeableRanks, specialTokens);
 }

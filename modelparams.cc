@@ -71,6 +71,7 @@ ModelParams ModelParamsGenerator::get_model_params(LanguageModel model, IResourc
 
 #if 0
 // latin alphabet only
+static auto constexpr o200k_pattern = "[^\\r\\na-zA-Z0-9]?[\\p{Lu}\\p{Lt}\\p{Lm}\\p{Lo}\\p{M}]*[\\p{Ll}\\p{Lm}\\p{Lo}\\p{M}]+(?i:'s|'t|'re|'ve|'m|'ll|'d)?|[^\\r\\na-zA-Z0-9]?[\\p{Lu}\\p{Lt}\\p{Lm}\\p{Lo}\\p{M}]+[\\p{Ll}\\p{Lm}\\p{Lo}\\p{M}]*(?i:'s|'t|'re|'ve|'m|'ll|'d)?|[0-9]{1,3}| ?[^\\sa-zA-Z0-9]+[\\r\\n/]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+";
 static auto constexpr cl100k_pattern = "(?:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\na-zA-Z0-9]?[a-zA-Z]+|[0-9]{1,3}| ?[^\\sa-zA-Z0-9]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+";
 static auto constexpr p50k_pattern = "'s|'t|'re|'ve|'m|'ll|'d| ?[a-zA-Z]+| ?[0-9]+| ?[^\\sa-zA-Z0-9]+|\\s+(?!\\S)|\\s+";
 #else

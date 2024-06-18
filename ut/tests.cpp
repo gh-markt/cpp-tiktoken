@@ -39,6 +39,15 @@ TEST(TestGetEncoding, TestDefaultEncod)
     ASSERT_EQ(tokens[1], 1917);
 }
 
+TEST(TestGetEncoding, TestEncode_O200K_BASE)
+{
+    auto encoder = GptEncoding::get_encoding(LanguageModel::O200K_BASE);
+    std::vector<int> tokens = encoder->encode("hello world");
+    ASSERT_EQ(tokens.size(), 2);
+    ASSERT_EQ(tokens[0], 24912);
+    ASSERT_EQ(tokens[1], 2375);
+}
+
 TEST(TestGetEncoding, TestCustomResourceReader)
 {
     TFilePathResourceReader reader("../tokenizers/cl100k_base.tiktoken");

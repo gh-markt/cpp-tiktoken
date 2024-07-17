@@ -23,7 +23,7 @@
 #include <fmt/format.h>
 #include <iostream>
 #define PCRE2_CODE_UNIT_WIDTH 0
-#include "pcre2.h"
+#include <pcre2.h>
 
 GptEncoding::GptEncoding(const std::string &pattern_string, const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &byte_pair_ranks,
     const std::unordered_map<std::string, int> &special_token_mappings, int explicit_n_vocab) :

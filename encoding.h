@@ -26,7 +26,7 @@
 class IResourceReader;
 
 class GptEncoding {
-    int max_token_value_;
+    int max_token_value_, n_words;
     std::unordered_map<std::string, int> special_token_mappings_;
     BytePairEncodingCore byte_pair_encoding_core_processor_;
 
@@ -34,6 +34,7 @@ public:
     GptEncoding(const std::string &pattern_string, const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &byte_pair_ranks,
         const std::unordered_map<std::string, int> &special_token_mappings, int explicit_n_vocab);
     static std::shared_ptr<GptEncoding> get_encoding(LanguageModel model, IResourceReader* resource_reader = nullptr);
+    static std::shared_ptr<GptEncoding> get_encoding_llama3(LanguageModel model, IResourceReader* resource_reader = nullptr);
     std::vector<int> encode(const std::string &line_to_encode, const std::unordered_set<std::string> &allowed_special = {},
         const std::unordered_set<std::string> &disallowed_special = { "all" });
     std::string decode(const std::vector<int> &input_tokens_to_decode);

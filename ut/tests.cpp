@@ -57,3 +57,34 @@ TEST(TestGetEncoding, TestCustomResourceReader)
     ASSERT_EQ(tokens[0], 15339);
     ASSERT_EQ(tokens[1], 1917);
 }
+
+// Test cases below are inspired by meta-llama3 https://github.com/meta-llama/llama3/blob/main/llama/test_tokenizer.py
+
+TEST(TestGetEncoding, TestLLama3Tokenizer)
+{
+    TFilePathResourceReader reader("../tokenizers/tokenizer.model");
+    auto encoder = GptEncoding::get_encoding_llama3(LanguageModel::CL100K_BASE, &reader);
+    std::vector<int> tokens = encoder->encode("This is a test sentence.");
+    for(int i = 0;i<tokens.size();i++){
+        std::cout<< encoder->decode({tokens[i]})<<" ";
+    }
+    std::cout<<"\n";
+    ASSERT_EQ(tokens.size(), 6);
+    ASSERT_EQ(tokens[0], 2028);
+    ASSERT_EQ(tokens[1], 374);
+    ASSERT_EQ(tokens[2], 264);
+    ASSERT_EQ(tokens[3], 1296);
+    ASSERT_EQ(tokens[4], 11914);
+    ASSERT_EQ(tokens[5], 13);
+
+    std::vector<int> role_user = encoder->encode("user");
+    std::vector<int> role_system = encoder->encode("system");
+    std::vector<int> paragraph = encoder->encode("\n\n");
+
+    std::string decode_str = encoder->decode({128000, 2028, 374, 264, 1296, 11914, 13, 128001});
+
+    ASSERT_EQ(role_user[0], 882);
+    ASSERT_EQ(role_system[0], 9125);
+    ASSERT_EQ(paragraph[0], 271);
+    ASSERT_EQ(decode_str, "<|begin_of_text|>This is a test sentence.<|end_of_text|>");
+}

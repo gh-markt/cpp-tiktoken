@@ -4,8 +4,7 @@ project(tiktoken LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(PCRE2 CONFIG COMPONENTS 8BIT)
-set(PCRE2_USE_STATIC_LIBS ON)
+add_subdirectory(pcre2)
 
 option(CPP_TIKTOKEN_TESTING "Enable testing" ON)
 

@@ -1,5 +1,4 @@
 find_package(GTest REQUIRED)
-find_package(fmt)
 
 add_executable(tests tests.cpp)
 
@@ -7,7 +6,6 @@ target_link_libraries(tests
  PRIVATE
   GTest::GTest
   GTest::gtest_main
-  fmt::fmt
   tiktoken)
 
 add_test(gtest tests)

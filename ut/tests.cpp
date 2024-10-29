@@ -88,3 +88,36 @@ TEST(TestGetEncoding, TestLLama3Tokenizer)
     ASSERT_EQ(paragraph[0], 271);
     ASSERT_EQ(decode_str, "<|begin_of_text|>This is a test sentence.<|end_of_text|>");
 }
+
+
+TEST(TestGetEncoding, TestLLama3_1Tokenizer)
+{
+    TFilePathResourceReader reader("../tokenizers/tokenizer_llama3.1.model");
+    auto encoder = GptEncoding::get_encoding_llama3_1(LanguageModel::CL100K_BASE, &reader);
+    std::vector<int> tokens = encoder->encode("请你基于以下「评估标准」");
+    for(int i = 0;i<tokens.size();i++){
+        std::cout<< encoder->decode({tokens[i]})<<" ";
+    }
+    std::cout<<"\n";
+    ASSERT_EQ(tokens.size(), 9);
+    ASSERT_EQ(tokens[0], 15225);
+    ASSERT_EQ(tokens[1], 57668);
+    ASSERT_EQ(tokens[2], 125510);
+    ASSERT_EQ(tokens[3], 88852);
+    ASSERT_EQ(tokens[4], 13177);
+    ASSERT_EQ(tokens[5], 64479);
+    ASSERT_EQ(tokens[6], 112494);
+    ASSERT_EQ(tokens[7], 110778);
+    ASSERT_EQ(tokens[8], 10646);
+
+    std::vector<int> role_user = encoder->encode("user");
+    std::vector<int> role_system = encoder->encode("system");
+    std::vector<int> paragraph = encoder->encode("\n\n");
+
+    std::string decode_str = encoder->decode({128000, 2028, 374, 264, 1296, 11914, 13, 128001});
+
+    ASSERT_EQ(role_user[0], 882);
+    ASSERT_EQ(role_system[0], 9125);
+    ASSERT_EQ(paragraph[0], 271);
+    ASSERT_EQ(decode_str, "<|begin_of_text|>This is a test sentence.<|end_of_text|>");
+}

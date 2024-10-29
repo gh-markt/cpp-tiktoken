@@ -5,8 +5,6 @@ find_package(fmt)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_subdirectory(pcre2)
-
 option(CPP_TIKTOKEN_TESTING "Enable testing" ON)
 
 set(OPENAPI_SOURCES byte_pair_encoding.cc emdedded_resource_reader.cc modelparams.cc encoding.cc encoding_utils.cc pcre2_regex.cc)

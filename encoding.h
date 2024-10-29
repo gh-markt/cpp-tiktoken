@@ -35,6 +35,7 @@ public:
         const std::unordered_map<std::string, int> &special_token_mappings, int explicit_n_vocab);
     static std::shared_ptr<GptEncoding> get_encoding(LanguageModel model, IResourceReader* resource_reader = nullptr);
     static std::shared_ptr<GptEncoding> get_encoding_llama3(LanguageModel model, IResourceReader* resource_reader = nullptr);
+    static std::shared_ptr<GptEncoding> get_encoding_llama3_1(LanguageModel model, IResourceReader* resource_reader = nullptr);
     std::vector<int> encode(const std::string &line_to_encode, const std::unordered_set<std::string> &allowed_special = {},
         const std::unordered_set<std::string> &disallowed_special = { "all" });
     std::string decode(const std::vector<int> &input_tokens_to_decode);

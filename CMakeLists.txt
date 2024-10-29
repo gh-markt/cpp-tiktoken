@@ -5,8 +5,7 @@ find_package(fmt)
 
 set(CMAKE_CXX_STANDARD 20)
 
-find_package(PCRE2 CONFIG COMPONENTS 8BIT)
-set(PCRE2_USE_STATIC_LIBS ON)
+add_subdirectory(pcre2)
 
 option(CPP_TIKTOKEN_TESTING "Enable testing" ON)
 
@@ -23,5 +22,5 @@ else()
 endif()
 
 MESSAGE(STATUS "Copying tokenizers to '${CMAKE_BINARY_DIR}/tokenizers'.")
-FILE(COPY o200k_base.tiktoken cl100k_base.tiktoken p50k_base.tiktoken r50k_base.tiktoken DESTINATION "${CMAKE_BINARY_DIR}/tokenizers")
+FILE(COPY o200k_base.tiktoken cl100k_base.tiktoken p50k_base.tiktoken r50k_base.tiktoken tokenizer.model tokenizer_llama3.1.model DESTINATION "${CMAKE_BINARY_DIR}/tokenizers")
 MESSAGE(STATUS "Tokenizers copied.")

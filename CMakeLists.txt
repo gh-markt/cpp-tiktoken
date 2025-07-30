@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.1.2)
 
 project(tiktoken LANGUAGES CXX VERSION 0.0.1)
-find_package(fmt)
-
 
 set(CMAKE_CXX_STANDARD 20)
 set(INSTALL_TARGETS tiktoken)
@@ -12,12 +10,14 @@ include(GNUInstallDirs)
 option(CPP_TIKTOKEN_INSTALL "Generate the install target." ON)
 option(CPP_TIKTOKEN_TESTING "Enable testing" ON)
 
+add_subdirectory(pcre2)
+
 set(OPENAPI_SOURCES byte_pair_encoding.cc emdedded_resource_reader.cc modelparams.cc encoding.cc encoding_utils.cc pcre2_regex.cc)
 set(OPENAPI_HEADERS byte_pair_encoding.h emdedded_resource_reader.h modelparams.h encoding.h encoding_utils.h pcre2_regex.h)
 
 add_library(tiktoken ${OPENAPI_SOURCES})
 set_target_properties(tiktoken PROPERTIES PUBLIC_HEADER "${OPENAPI_HEADERS}")
-target_link_libraries(tiktoken pcre2-8 fmt::fmt)
+target_link_libraries(tiktoken pcre2-8)
 target_include_directories(tiktoken PUBLIC  
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>  
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/tiktoken>  # <prefix>/include/mylib

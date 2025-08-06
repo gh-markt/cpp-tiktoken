@@ -17,9 +17,9 @@
  */
 #pragma once
 
-#include "encoding_utils.h"
+#include "common.h"
+#include "pcre2_regex.h"
 #include <functional>
-#include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -28,23 +28,24 @@
 class PCRERegex;
 
 class BytePairEncodingCore {
-    std::unordered_map<std::vector<uint8_t>, int, VectorHash> byte_pair_ranks_;
+    bpe_encoding_t byte_pair_ranks_;
     std::unordered_map<std::string, int> special_token_mappings_;
-    std::shared_ptr<PCRERegex> pattern_string_;
+    PCRERegex pattern_string_;
 
     static std::vector<int> byte_pair_merge(const std::vector<uint8_t> &piece,
-        const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &ranks,
+        const bpe_encoding_t &ranks,
         const std::function<int(int, int)> &f);
 
 public:
-    BytePairEncodingCore(const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &byte_pair_ranks,
-        const std::unordered_map<std::string, int> &special_token_mappings,
-        const std::shared_ptr<PCRERegex> &pattern_string);
+    BytePairEncodingCore(bpe_encoding_t&& byte_pair_ranks,
+        std::unordered_map<std::string, int>&& special_token_mappings,
+        PCRERegex&& pattern_string);
 
     std::pair<std::vector<int>, std::vector<int>> encode_native(const std::string &line_to_encode,
         const std::unordered_set<std::string> &allowed_special);
     std::string decode_native(const std::vector<int> &input_tokens_to_decode);
     std::vector<std::string> break_into_specials(std::string const& line_to_encode, const std::unordered_set<std::string> &allowed_special);
 
-    [[nodiscard]] const std::unordered_map<std::vector<uint8_t>, int, VectorHash>& getBytePairRanks() const;
+    [[nodiscard]] const bpe_encoding_t& getBytePairRanks() const { return byte_pair_ranks_; }
+    [[nodiscard]] const std::unordered_map<std::string, int>& getSpecialTokenMappings() const { return special_token_mappings_; }
 };

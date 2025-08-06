@@ -21,52 +21,40 @@
 
 // ModelParams constructor and member functions
 
-ModelParams::ModelParams(int explicit_n_vocab, const std::string &pat_str,
-    const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &mergeable_ranks,
-    const std::unordered_map<std::string, int> &special_tokens) :
-    explicit_n_vocab_(
-        explicit_n_vocab),
-    pat_str_(pat_str), mergeable_ranks_(mergeable_ranks), special_tokens_(special_tokens)
+ModelParams::ModelParams() :
+    explicit_n_vocab(0)
 {
 }
 
-int ModelParams::explicit_n_vocab() const
+ModelParams::ModelParams(int explicit_n_vocab, std::string &&pat_str,
+    bpe_encoding_t&& mergeable_ranks,
+    std::unordered_map<std::string, int>&& special_tokens) :
+    explicit_n_vocab(explicit_n_vocab),
+    pat_str(std::move(pat_str)), mergeable_ranks(std::move(mergeable_ranks)), special_tokens(std::move(special_tokens))
 {
-    return explicit_n_vocab_;
-}
-
-std::string ModelParams::pat_str() const
-{
-    return pat_str_;
-}
-
-std::unordered_map<std::vector<uint8_t>, int, VectorHash> ModelParams::mergeable_ranks() const
-{
-    return mergeable_ranks_;
-}
-
-std::unordered_map<std::string, int> ModelParams::special_tokens() const
-{
-    return special_tokens_;
 }
 
 // ModelParamsGenerator member functions
 
-ModelParams ModelParamsGenerator::get_model_params(LanguageModel model, IResourceReader* resource_reader)
+ModelParams ModelParamsGenerator::get_model_params(LanguageModel model, const char *resource_name, IResourceReader *resource_reader)
 {
     switch (model) {
         case LanguageModel::O200K_BASE:
-            return o200k_base(resource_reader);
+            return o200k_base(resource_name, resource_reader);
         case LanguageModel::CL100K_BASE:
-            return cl100k_base(resource_reader);
+            return cl100k_base(resource_name, resource_reader);
         case LanguageModel::P50K_BASE:
-            return p50k_base(resource_reader);
+            return p50k_base(resource_name, resource_reader);
         case LanguageModel::P50K_EDIT:
-            return p50k_edit(resource_reader);
+            return p50k_edit(resource_name, resource_reader);
         case LanguageModel::R50K_BASE:
-            return r50k_base(resource_reader);
+            return r50k_base(resource_name, resource_reader);
     }
+#if TIKTOKEN_EXCEPTIONS_ENABLE
     throw std::runtime_error("Invalid argument to get_model_params");
+#else
+    return ModelParams();
+#endif
 }
 
 #if 0
@@ -81,50 +69,81 @@ static auto constexpr cl100k_pattern = "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p
 static auto constexpr p50k_pattern = "'s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+";
 #endif
 
-ModelParams ModelParamsGenerator::r50k_base(IResourceReader* resource_reader) 
+constexpr const char* embedded_resource_from_model(LanguageModel model)
 {
-    EmbeddedResourceLoader loader("r50k_base.tiktoken", resource_reader);
-    auto mergeableRanks = loader.loadTokenBytePairEncoding();
+    constexpr const char* resource_name[(int)LanguageModel::COUNT] = {
+        "o200k_base.tiktoken",
+        "cl100k_base.tiktoken",
+        "r50k_base.tiktoken",
+        "p50k_base.tiktoken",
+        "p50k_base.tiktoken"
+    };
 
-    return ModelParams(50257, p50k_pattern, mergeableRanks, { { EndOfText, 50256 } });
+    return resource_name[(int) model];
 }
 
-ModelParams ModelParamsGenerator::p50k_base(IResourceReader* resource_reader)
+ModelParams ModelParamsGenerator::r50k_base(const char *resource_name, IResourceReader *resource_reader)
 {
-    EmbeddedResourceLoader loader("p50k_base.tiktoken", resource_reader);
-    auto mergeableRanks = loader.loadTokenBytePairEncoding();
+    resource_name = resource_name ? resource_name : embedded_resource_from_model(LanguageModel::R50K_BASE);
 
-    return ModelParams(50281, p50k_pattern, mergeableRanks, { { EndOfText, 50256 } });
+    EmbeddedResourceLoader loader(resource_name, resource_reader);
+    return ModelParams(50257, 
+        p50k_pattern, 
+        loader.loadTokenBytePairEncoding(), 
+        { { EndOfText, 50256 } });
 }
 
-ModelParams ModelParamsGenerator::p50k_edit(IResourceReader* resource_reader)
+ModelParams ModelParamsGenerator::p50k_base(const char *resource_name, IResourceReader *resource_reader)
 {
-    EmbeddedResourceLoader loader("p50k_base.tiktoken", resource_reader);
-    auto mergeableRanks = loader.loadTokenBytePairEncoding();
+    resource_name = resource_name ? resource_name : embedded_resource_from_model(LanguageModel::P50K_BASE);
+
+    EmbeddedResourceLoader loader(resource_name, resource_reader);
+    return ModelParams(50281, 
+        p50k_pattern, 
+        loader.loadTokenBytePairEncoding(), 
+        { { EndOfText, 50256 } });
+}
+
+ModelParams ModelParamsGenerator::p50k_edit(const char *resource_name, IResourceReader *resource_reader)
+{
+    resource_name = resource_name ? resource_name : embedded_resource_from_model(LanguageModel::P50K_EDIT);
+
+    EmbeddedResourceLoader loader(resource_name, resource_reader);
 
     std::unordered_map<std::string, int> specialTokens = { { EndOfText, 50256 }, { FimPrefix, 50281 }, { FimMiddle, 50282 },
         { FimSuffix, 50283 } };
 
-    return ModelParams(0, p50k_pattern, mergeableRanks, specialTokens);
+    return ModelParams(0, 
+        p50k_pattern, 
+        loader.loadTokenBytePairEncoding(), 
+        std::move(specialTokens));
 }
 
-ModelParams ModelParamsGenerator::cl100k_base(IResourceReader* resource_reader)
+ModelParams ModelParamsGenerator::cl100k_base(const char *resource_name, IResourceReader *resource_reader)
 {
-    EmbeddedResourceLoader loader("cl100k_base.tiktoken", resource_reader);
-    auto mergeableRanks = loader.loadTokenBytePairEncoding();
+    resource_name = resource_name ? resource_name : embedded_resource_from_model(LanguageModel::CL100K_BASE);
+
+    EmbeddedResourceLoader loader(resource_name, resource_reader);
 
     std::unordered_map<std::string, int> specialTokens = { { EndOfText, 100257 }, { FimPrefix, 100258 }, { FimMiddle, 100259 },
         { FimSuffix, 100260 }, { EndOfPrompt, 100276 } };
 
-    return ModelParams(0, cl100k_pattern, mergeableRanks, specialTokens);
+    return ModelParams(0, 
+        cl100k_pattern, 
+        loader.loadTokenBytePairEncoding(), 
+        std::move(specialTokens));
 }
 
-ModelParams ModelParamsGenerator::o200k_base(IResourceReader* resource_reader)
+ModelParams ModelParamsGenerator::o200k_base(const char *resource_name, IResourceReader *resource_reader)
 {
-    EmbeddedResourceLoader loader("o200k_base.tiktoken", resource_reader);
-    auto mergeableRanks = loader.loadTokenBytePairEncoding();
+    resource_name = resource_name ? resource_name : embedded_resource_from_model(LanguageModel::O200K_BASE);
+
+    EmbeddedResourceLoader loader(resource_name, resource_reader);
 
     std::unordered_map<std::string, int> specialTokens = { { EndOfText, 199999 }, { EndOfPrompt, 200018 } };
 
-    return ModelParams(0, o200k_pattern, mergeableRanks, specialTokens);
+    return ModelParams(0, 
+        o200k_pattern, 
+        loader.loadTokenBytePairEncoding(), 
+        std::move(specialTokens));
 }

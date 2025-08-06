@@ -24,9 +24,10 @@ static std::string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 namespace base64 {
 static auto constexpr fillchar = '=';
 
-static std::string cvt = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                         "abcdefghijklmnopqrstuvwxyz"
-                         "0123456789+/";
+static constexpr std::string_view cvt = 
+"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+"abcdefghijklmnopqrstuvwxyz"
+"0123456789+/";
 
 std::vector<uint8_t> decode(const std::string &data)
 {

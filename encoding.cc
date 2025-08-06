@@ -19,37 +19,28 @@
 #include "modelparams.h"
 #include "pcre2_regex.h"
 
-#include <iostream>
 #include <stdexcept>
 #define PCRE2_CODE_UNIT_WIDTH 0
 #include <pcre2.h>
 
-GptEncoding::GptEncoding(const std::string &pattern_string, const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &byte_pair_ranks,
-    const std::unordered_map<std::string, int> &special_token_mappings, int explicit_n_vocab) :
-    max_token_value_(0),
+GptEncoding::GptEncoding(std::string&& pattern_string, bpe_encoding_t&& byte_pair_ranks,
+    std::unordered_map<std::string, int>&& special_token_mappings, int explicit_n_vocab) :
     n_words(explicit_n_vocab),
-    special_token_mappings_(special_token_mappings),
-    byte_pair_encoding_core_processor_(byte_pair_ranks, special_token_mappings,
-        std::make_shared<PCRERegex>(pattern_string, PCRE2_CASELESS)) { }
+    byte_pair_encoding_core_processor_(std::move(byte_pair_ranks), std::move(special_token_mappings),
+        PCRERegex(pattern_string, PCRE2_CASELESS)) { }
 
-std::shared_ptr<GptEncoding> GptEncoding::get_encoding(LanguageModel model, IResourceReader *resource_reader)
+GptEncoding GptEncoding::get_encoding(ModelParams &&params)
 {
-    ModelParams model_params = ModelParamsGenerator::get_model_params(model, resource_reader);
-    // std::cout<<"Len mergeble rank" <<model_params.mergeable_ranks().size()<<"\n";
-    return std::make_shared<GptEncoding>(model_params.pat_str(), model_params.mergeable_ranks(),
-        model_params.special_tokens(), model_params.explicit_n_vocab());
+    return GptEncoding(std::move(params.pat_str), std::move(params.mergeable_ranks),
+        std::move(params.special_tokens), params.explicit_n_vocab);
 }
 
-// Implement with custom additional params for LLAMA 3
-
-std::shared_ptr<GptEncoding> GptEncoding::get_encoding_llama3(LanguageModel model, IResourceReader *resource_reader)
+GptEncoding GptEncoding::get_encoding_llama3(ModelParams &&params)
 {
-    ModelParams model_params = ModelParamsGenerator::get_model_params(model, resource_reader);
-    std::cout << "Len mergeble rank" << model_params.mergeable_ranks().size() << "\n";
-    int num_reserved_special_tokens = 256;
-    int num_base_tokens = model_params.mergeable_ranks().size();
+    const int num_reserved_special_tokens = 256;
+    const int num_base_tokens = (int) params.mergeable_ranks.size();
+
     std::unordered_map<std::string, int> special_llama3_token_mappings;
-    std::cout << "Model pat string" << model_params.pat_str() << "\n";
     std::vector<std::string> list_special_tokens = { "<|begin_of_text|>",
         "<|end_of_text|>",
         "<|reserved_special_token_0|>",
@@ -67,20 +58,16 @@ std::shared_ptr<GptEncoding> GptEncoding::get_encoding_llama3(LanguageModel mode
         special_llama3_token_mappings.insert({ list_special_tokens[i], num_base_tokens + i });
     }
 
-    return std::make_shared<GptEncoding>(model_params.pat_str(), model_params.mergeable_ranks(),
-        special_llama3_token_mappings, model_params.explicit_n_vocab());
+    return GptEncoding(std::move(params.pat_str), std::move(params.mergeable_ranks),
+        std::move(special_llama3_token_mappings), params.explicit_n_vocab);
 }
 
-// Implement with custom additional params for LLAMA 3.1 LLAMA 3.2
-
-std::shared_ptr<GptEncoding> GptEncoding::get_encoding_llama3_1(LanguageModel model, IResourceReader *resource_reader)
+GptEncoding GptEncoding::get_encoding_llama3_1(ModelParams &&params)
 {
-    ModelParams model_params = ModelParamsGenerator::get_model_params(model, resource_reader);
-    std::cout << "Len mergeble rank" << model_params.mergeable_ranks().size() << "\n";
-    int num_reserved_special_tokens = 256;
-    int num_base_tokens = model_params.mergeable_ranks().size();
+    const int num_reserved_special_tokens = 256;
+    const int num_base_tokens = (int) params.mergeable_ranks.size();
+
     std::unordered_map<std::string, int> special_llama3_token_mappings;
-    std::cout << "Model pat string" << model_params.pat_str() << "\n";
     std::vector<std::string> list_special_tokens = { "<|begin_of_text|>",
         "<|end_of_text|>",
         "<|reserved_special_token_0|>",
@@ -99,8 +86,33 @@ std::shared_ptr<GptEncoding> GptEncoding::get_encoding_llama3_1(LanguageModel mo
         special_llama3_token_mappings.insert({ list_special_tokens[i], num_base_tokens + i });
     }
 
-    return std::make_shared<GptEncoding>(model_params.pat_str(), model_params.mergeable_ranks(),
-        special_llama3_token_mappings, model_params.explicit_n_vocab());
+    return GptEncoding(std::move(params.pat_str), std::move(params.mergeable_ranks),
+        std::move(special_llama3_token_mappings), params.explicit_n_vocab);
+}
+
+GptEncoding GptEncoding::get_encoding(LanguageModel model, IResourceReader *resource_reader, const char *resource_name)
+{
+    ModelParams model_params = ModelParamsGenerator::get_model_params(model, resource_name, resource_reader);
+
+    return get_encoding(std::move(model_params));
+}
+
+// Implement with custom additional params for LLAMA 3
+
+GptEncoding GptEncoding::get_encoding_llama3(LanguageModel model, IResourceReader *resource_reader, const char *resource_name)
+{
+    ModelParams model_params = ModelParamsGenerator::get_model_params(model, resource_name, resource_reader);
+
+    return get_encoding_llama3(std::move(model_params));
+}
+
+// Implement with custom additional params for LLAMA 3.1 LLAMA 3.2
+
+GptEncoding GptEncoding::get_encoding_llama3_1(LanguageModel model, IResourceReader *resource_reader, const char *resource_name)
+{
+    ModelParams model_params = ModelParamsGenerator::get_model_params(model, resource_name, resource_reader);
+
+    return get_encoding_llama3_1(std::move(model_params));
 }
 
 std::vector<int> GptEncoding::encode(const std::string &line_to_encode, const std::unordered_set<std::string> &allowed_special,
@@ -108,9 +120,13 @@ std::vector<int> GptEncoding::encode(const std::string &line_to_encode, const st
 {
     // Check for disallowed special tokens
     if (disallowed_special.count("all") > 0) {
-        for (const auto &special_token: special_token_mappings_) {
+        for (const auto &special_token: byte_pair_encoding_core_processor_.getSpecialTokenMappings()) {
             if (line_to_encode.find(special_token.first) != std::string::npos) {
+#if TIKTOKEN_EXCEPTIONS_ENABLE
                 throw std::invalid_argument("Disallowed special token found: " + special_token.first);
+#else
+                return {};
+#endif
             }
         }
     }
@@ -124,7 +140,7 @@ std::string GptEncoding::decode(const std::vector<int> &input_tokens_to_decode)
     return byte_pair_encoding_core_processor_.decode_native(input_tokens_to_decode);
 }
 
-const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &GptEncoding::get_byte_pair_token_map() const
+const bpe_encoding_t &GptEncoding::get_byte_pair_token_map() const
 {
     return byte_pair_encoding_core_processor_.getBytePairRanks();
 }

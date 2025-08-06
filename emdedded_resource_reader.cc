@@ -30,44 +30,105 @@
 #include <unistd.h>
 #endif
 
-namespace {
-
-std::filesystem::path get_exe_parent_path_intern() {
-    std::filesystem::path path;
-#ifdef _WIN32
-    wchar_t result[MAX_PATH] = {0};
-    GetModuleFileNameW(nullptr, result, MAX_PATH);
-    path = std::filesystem::path(result);
-#else
-    char result[PATH_MAX];
-    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-    path = std::filesystem::path(std::string(result, count > 0 ? count : 0));
+#if defined(TIKTOKEN_EMBEDDED_RESOURCES)
+extern std::pair<const unsigned char *, size_t> get_resource_cl100k_base();
+extern std::pair<const unsigned char *, size_t> get_resource_o200k_base();
+extern std::pair<const unsigned char *, size_t> get_resource_p50k_base();
+extern std::pair<const unsigned char *, size_t> get_resource_r50k_base();
 #endif
-    return path.parent_path();
-}
 
-}
-const std::filesystem::path exe_parent_path = get_exe_parent_path_intern();
-
-EmbeddedResourceReader::EmbeddedResourceReader(const std::string& resourceName) 
-    : resourceName_(resourceName)
+namespace 
 {
-}
-
-std::vector<std::string> EmbeddedResourceReader::readLines() {
-    std::filesystem::path resource_path = exe_parent_path / "tokenizers" / resourceName_;
-    std::ifstream file(resource_path);
-    if (!file.is_open()) {
-        throw std::runtime_error("Embedded resource '" + resource_path.string() + "' not found.");
+#ifndef TIKTOKEN_EMBEDDED_RESOURCES
+    std::filesystem::path get_exe_parent_path_intern() {
+        std::filesystem::path path;
+#ifdef _WIN32
+        wchar_t result[MAX_PATH] = {0};
+        GetModuleFileNameW(nullptr, result, MAX_PATH);
+        path = std::filesystem::path(result);
+#else
+        char result[PATH_MAX];
+        ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+        path = std::filesystem::path(std::string(result, count > 0 ? count : 0));
+#endif
+        return path.parent_path();
     }
 
-    std::string line;
-    std::vector<std::string> lines;
-    while (std::getline(file, line)) {
-        lines.push_back(line);
-    }
+    static const std::filesystem::path g_exe_parent_path = get_exe_parent_path_intern();
+#endif
 
-    return lines;
+    class EmbeddedResourceReader: public IResourceReader {
+    public:
+        std::vector<std::string> readLines(std::string_view resourceName) override;
+    };
+
+    std::vector<std::string> EmbeddedResourceReader::readLines(std::string_view resourceName)
+    {
+#ifndef TIKTOKEN_EMBEDDED_RESOURCES
+        std::filesystem::path resource_path = g_exe_parent_path / "tokenizers" / resourceName;
+        std::ifstream file(resource_path);
+        if (!file.is_open()) {
+#if TIKTOKEN_EXCEPTIONS_ENABLE
+            throw std::runtime_error("Embedded resource '" + resource_path.string() + "' not found.");
+#else
+            return {};
+#endif
+        }
+
+        std::string line;
+        std::vector<std::string> lines;
+        while (std::getline(file, line)) {
+            lines.push_back(line);
+        }
+
+        return lines;
+#else
+        auto readLinesFromMem = [](std::pair<const unsigned char *, size_t> mem) {
+            struct membuf: std::streambuf {
+                membuf(char *base, std::ptrdiff_t n)
+                {
+                    this->setg(base, base, base + n);
+                }
+            };
+
+            membuf sbuf(const_cast<char *>((const char*) mem.first), (ptrdiff_t) mem.second);
+            std::istream file(&sbuf);
+
+            std::string line;
+            std::vector<std::string> lines;
+            while (std::getline(file, line))
+                lines.push_back(line);
+
+            return lines;
+        };
+
+        if (resourceName == "o200k_base.tiktoken")
+        {
+            return readLinesFromMem(get_resource_o200k_base());
+        }
+        else if (resourceName == "cl100k_base.tiktoken") 
+        {
+            return readLinesFromMem(get_resource_cl100k_base());
+        }
+        else if (resourceName == "r50k_base.tiktoken") 
+        {
+            return readLinesFromMem(get_resource_r50k_base());
+        }
+        else if (resourceName == "p50k_base.tiktoken") 
+        {
+            return readLinesFromMem(get_resource_p50k_base());
+        } 
+        else
+        {
+#if TIKTOKEN_EXCEPTIONS_ENABLE
+            throw std::runtime_error("Embedded resource '" + (std::string) resourceName + "' not found.");
+#else
+            return {};
+#endif
+        }
+        
+#endif
+    }
 }
 
 EmbeddedResourceLoader::EmbeddedResourceLoader(const std::string& dataSourceName, IResourceReader* reader)
@@ -78,28 +139,28 @@ EmbeddedResourceLoader::EmbeddedResourceLoader(const std::string& dataSourceName
 
 std::vector<std::string> EmbeddedResourceLoader::readEmbeddedResourceAsLines() {
     if (!!resourceReader_) {
-        return resourceReader_->readLines();
+        return resourceReader_->readLines(dataSourceName_);
     }
-    return EmbeddedResourceReader(dataSourceName_).readLines();
+    return EmbeddedResourceReader().readLines(dataSourceName_);
 }
 
-std::unordered_map<std::vector<uint8_t>, int, VectorHash>
+bpe_encoding_t
 EmbeddedResourceLoader::loadTokenBytePairEncoding()
 {
     auto lines = readEmbeddedResourceAsLines();
-    std::unordered_map<std::vector<uint8_t>, int, VectorHash> token_byte_pair_encoding;
+    bpe_encoding_t token_byte_pair_encoding;
 
     for (const auto &line: lines) {
         if (!line.empty()) {
             std::istringstream iss(line);
+
             std::string base64_string;
             int rank;
 
             iss >> base64_string >> rank;
-            auto decoded = base64::decode(base64_string);
-            std::vector<uint8_t> decoded_bytes(decoded.begin(), decoded.end());
 
-            token_byte_pair_encoding[decoded_bytes] = rank;
+            auto decoded = base64::decode(base64_string);
+            token_byte_pair_encoding.insert({std::move(decoded), rank});
         }
     }
 

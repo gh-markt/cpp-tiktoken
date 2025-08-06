@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include "common.h"
 #include "encoding_utils.h"
 #include <string>
 #include <unordered_map>
@@ -24,20 +25,15 @@
 
 class ModelParams {
 public:
-    ModelParams(int explicit_n_vocab, const std::string &pat_str,
-        const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &mergeable_ranks,
-        const std::unordered_map<std::string, int> &special_tokens);
+    ModelParams();
+    ModelParams(int explicit_n_vocab, std::string&& pat_str,
+        bpe_encoding_t&& mergeable_ranks,
+        std::unordered_map<std::string, int>&& special_tokens);
 
-    int explicit_n_vocab() const;
-    std::string pat_str() const;
-    std::unordered_map<std::vector<uint8_t>, int, VectorHash> mergeable_ranks() const;
-    std::unordered_map<std::string, int> special_tokens() const;
-
-private:
-    int explicit_n_vocab_;
-    std::string pat_str_;
-    std::unordered_map<std::vector<uint8_t>, int, VectorHash> mergeable_ranks_;
-    std::unordered_map<std::string, int> special_tokens_;
+    int explicit_n_vocab;
+    std::string pat_str;
+    bpe_encoding_t mergeable_ranks;
+    std::unordered_map<std::string, int> special_tokens;
 };
 
 enum class LanguageModel {
@@ -45,14 +41,16 @@ enum class LanguageModel {
     CL100K_BASE,
     R50K_BASE,
     P50K_BASE,
-    P50K_EDIT
+    P50K_EDIT,
+
+    COUNT
 };
 
 class IResourceReader;
 
 class ModelParamsGenerator {
 public:
-    static ModelParams get_model_params(LanguageModel model, IResourceReader* resource_reader = nullptr);
+    static ModelParams get_model_params(LanguageModel model, const char* resource_name = nullptr, IResourceReader* resource_reader = nullptr);
     static auto constexpr EndOfText = "<|endoftext|>";
     static auto constexpr FimPrefix = "<|fim_prefix|>";
     static auto constexpr FimMiddle = "<|fim_middle|>";
@@ -60,9 +58,9 @@ public:
     static auto constexpr EndOfPrompt = "<|endofprompt|>";
 
 private:
-    static ModelParams r50k_base(IResourceReader* resource_reader = nullptr);
-    static ModelParams p50k_base(IResourceReader* resource_reader = nullptr);
-    static ModelParams p50k_edit(IResourceReader* resource_reader = nullptr);
-    static ModelParams cl100k_base(IResourceReader* resource_reader = nullptr);
-    static ModelParams o200k_base(IResourceReader* resource_reader = nullptr);
+    static ModelParams r50k_base(const char* resource_name = nullptr, IResourceReader* resource_reader = nullptr);
+    static ModelParams p50k_base(const char *resource_name = nullptr, IResourceReader *resource_reader = nullptr);
+    static ModelParams p50k_edit(const char *resource_name = nullptr, IResourceReader *resource_reader = nullptr);
+    static ModelParams cl100k_base(const char *resource_name = nullptr, IResourceReader *resource_reader = nullptr);
+    static ModelParams o200k_base(const char *resource_name = nullptr, IResourceReader *resource_reader = nullptr);
 };

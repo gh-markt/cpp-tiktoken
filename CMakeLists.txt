@@ -9,19 +9,37 @@ include(GNUInstallDirs)
 
 option(CPP_TIKTOKEN_INSTALL "Generate the install target." ON)
 option(CPP_TIKTOKEN_TESTING "Enable testing" ON)
+option(CPP_TIKTOKEN_EMBED_RESOURCES "Compile BPEs into executable" ON)
 
 add_subdirectory(pcre2)
 
 set(OPENAPI_SOURCES byte_pair_encoding.cc emdedded_resource_reader.cc modelparams.cc encoding.cc encoding_utils.cc pcre2_regex.cc)
-set(OPENAPI_HEADERS byte_pair_encoding.h emdedded_resource_reader.h modelparams.h encoding.h encoding_utils.h pcre2_regex.h)
+set(OPENAPI_HEADERS byte_pair_encoding.h emdedded_resource_reader.h modelparams.h encoding.h encoding_utils.h pcre2_regex.h common.h)
 
-add_library(tiktoken ${OPENAPI_SOURCES})
+add_library(tiktoken ${OPENAPI_SOURCES} ${OPENAPI_HEADERS})
 set_target_properties(tiktoken PROPERTIES PUBLIC_HEADER "${OPENAPI_HEADERS}")
 target_link_libraries(tiktoken pcre2-8)
 target_include_directories(tiktoken PUBLIC  
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>  
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/tiktoken>  # <prefix>/include/mylib
 )
+
+if (CPP_TIKTOKEN_EMBED_RESOURCES)
+    set(OPENAPI_RSRC_FILES cl100k_base.tiktoken o200k_base.tiktoken p50k_base.tiktoken r50k_base.tiktoken)
+
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    include(cmake/resources.cmake)
+
+    add_library(tiktoken_resources_obj OBJECT)
+    foreach(RSRC_FILE IN LISTS OPENAPI_RSRC_FILES)
+        get_filename_component(RSRC_NAME "${RSRC_FILE}" NAME_WE)
+        tiktoken_embed_resource("${CMAKE_SOURCE_DIR}/${RSRC_FILE}" ${RSRC_NAME} RESOURCE_CPP_FILE)
+        target_sources(tiktoken_resources_obj PRIVATE ${RESOURCE_CPP_FILE})
+    endforeach()
+
+    target_sources(tiktoken PRIVATE $<TARGET_OBJECTS:tiktoken_resources_obj>)
+    target_compile_definitions(tiktoken PRIVATE TIKTOKEN_EMBEDDED_RESOURCES=1)
+endif()
 
 if (NOT CPP_TIKTOKEN_TESTING)
     message(STATUS "Tests off")

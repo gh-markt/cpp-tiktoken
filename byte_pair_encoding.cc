@@ -23,15 +23,15 @@
 #include <string>
 #include <algorithm>
 
-BytePairEncodingCore::BytePairEncodingCore(const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &byte_pair_ranks,
-    const std::unordered_map<std::string, int> &special_token_mappings,
-    const std::shared_ptr<PCRERegex> &pattern_string) :
-    byte_pair_ranks_(byte_pair_ranks),
-    special_token_mappings_(special_token_mappings),
-    pattern_string_(pattern_string) { }
+BytePairEncodingCore::BytePairEncodingCore(bpe_encoding_t&& byte_pair_ranks,
+    std::unordered_map<std::string, int>&& special_token_mappings,
+    PCRERegex&& pattern_string) :
+    byte_pair_ranks_(std::move(byte_pair_ranks)),
+    special_token_mappings_(std::move(special_token_mappings)),
+    pattern_string_(std::move(pattern_string)) { }
 
 std::vector<int> BytePairEncodingCore::byte_pair_merge(const std::vector<uint8_t> &piece,
-    const std::unordered_map<std::vector<uint8_t>, int, VectorHash> &ranks,
+    const bpe_encoding_t &ranks,
     const std::function<int(int, int)> &f)
 {
     std::vector<std::pair<int, int>> partitions(piece.size() + 1);
@@ -118,7 +118,7 @@ std::pair<std::vector<int>, std::vector<int>> BytePairEncodingCore::encode_nativ
             tokens.push_back(special_mapping->second);
             segment_ids.push_back(0);
         } else {
-            auto matches = pattern_string_->get_all_matches(line);
+            auto matches = pattern_string_.get_all_matches(line);
             for (auto token: matches) {
                 auto special_mapping = special_token_mappings_.find(token);
                 if (special_mapping != special_token_mappings_.end() && allowed_special.count(token) > 0) {
@@ -167,8 +167,4 @@ std::string BytePairEncodingCore::decode_native(const std::vector<int> &input_to
         }
     }
     return decoded_string.str();
-}
-
-const std::unordered_map<std::vector<uint8_t>, int, VectorHash>& BytePairEncodingCore::getBytePairRanks() const {
-    return byte_pair_ranks_;
 }

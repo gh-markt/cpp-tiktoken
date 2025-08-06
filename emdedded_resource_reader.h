@@ -17,38 +17,28 @@
  */
 #pragma once
 
-#include "encoding_utils.h"
+#include "common.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 class IResourceReader {
 public:
-    virtual std::vector<std::string> readLines() = 0;
-};
-
-class EmbeddedResourceReader : public IResourceReader {
-public:
-    EmbeddedResourceReader(const std::string& resourceName);
-    std::vector<std::string> readLines() override;
-private:
-    std::string resourceName_;
+    virtual std::vector<std::string> readLines(std::string_view resourceName) = 0;
 };
 
 class EmbeddedResourceLoader {
 public:
-    EmbeddedResourceLoader(
+    explicit EmbeddedResourceLoader(
         const std::string& dataSourceName,
         IResourceReader* reader = nullptr
     );
     
-    std::unordered_map<std::vector<uint8_t>, int, VectorHash>
-    loadTokenBytePairEncoding();
+    bpe_encoding_t loadTokenBytePairEncoding();
 
 private:
     std::vector<std::string> readEmbeddedResourceAsLines();
 
-private:
     IResourceReader* resourceReader_;
     std::string dataSourceName_;
 };

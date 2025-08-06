@@ -17,17 +17,18 @@
  */
 #pragma once
 
+#include "common.h"
 #include <cstring>
-#include <memory>
 #include <string>
 #include <vector>
 
 class PCRERegex {
     class Impl;
 public:
-    PCRERegex(const std::string &pattern, int flags);
-    explicit PCRERegex(const std::string &pattern);
-    PCRERegex(PCRERegex &&);
+    explicit PCRERegex(const std::string &pattern, int flags = 0);
+    PCRERegex(PCRERegex&&);
+    PCRERegex& operator=(PCRERegex&&);
+    PCRERegex& operator=(const PCRERegex&) = delete;
     PCRERegex(const PCRERegex &) = delete;
     ~PCRERegex();
 
@@ -37,5 +38,5 @@ public:
     [[nodiscard]] std::vector<std::pair<std::string::size_type, std::string::size_type>> all_matches(const std::string &text) const;
 
 private:
-    std::shared_ptr<Impl> impl_;
+    void* impl_state_;
 };

@@ -1,5 +1,5 @@
 #include "encoding.h"
-#include "emdedded_resource_reader.h"
+#include "embedded_resource_reader.h"
 
 #include "gtest/gtest.h"
 

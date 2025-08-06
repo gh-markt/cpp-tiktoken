@@ -13,8 +13,8 @@ option(CPP_TIKTOKEN_EMBED_RESOURCES "Compile BPEs into executable" ON)
 
 add_subdirectory(pcre2)
 
-set(OPENAPI_SOURCES byte_pair_encoding.cc emdedded_resource_reader.cc modelparams.cc encoding.cc encoding_utils.cc pcre2_regex.cc)
-set(OPENAPI_HEADERS byte_pair_encoding.h emdedded_resource_reader.h modelparams.h encoding.h encoding_utils.h pcre2_regex.h common.h)
+set(OPENAPI_SOURCES byte_pair_encoding.cc embedded_resource_reader.cc modelparams.cc encoding.cc encoding_utils.cc pcre2_regex.cc)
+set(OPENAPI_HEADERS byte_pair_encoding.h embedded_resource_reader.h modelparams.h encoding.h encoding_utils.h pcre2_regex.h common.h)
 
 add_library(tiktoken ${OPENAPI_SOURCES} ${OPENAPI_HEADERS})
 set_target_properties(tiktoken PROPERTIES PUBLIC_HEADER "${OPENAPI_HEADERS}")

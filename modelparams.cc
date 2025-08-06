@@ -16,7 +16,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "modelparams.h"
-#include "emdedded_resource_reader.h"
+#include "embedded_resource_reader.h"
 #include <stdexcept>
 
 // ModelParams constructor and member functions

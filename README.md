@@ -20,6 +20,7 @@ Supported language models that you can pass as a parameter to this function are:
         LanguageModel::R50K_BASE
         LanguageModel::P50K_BASE
         LanguageModel::P50K_EDIT
+        LanguageModel::QWEN_BASE
 
 After obtaining an encoder, you can then call
 

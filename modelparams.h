@@ -45,7 +45,8 @@ enum class LanguageModel {
     CL100K_BASE,
     R50K_BASE,
     P50K_BASE,
-    P50K_EDIT
+    P50K_EDIT,
+    QWEN_BASE
 };
 
 class IResourceReader;
@@ -58,6 +59,8 @@ public:
     static auto constexpr FimMiddle = "<|fim_middle|>";
     static auto constexpr FimSuffix = "<|fim_suffix|>";
     static auto constexpr EndOfPrompt = "<|endofprompt|>";
+    static auto constexpr ImStart = "<|im_start|>";
+    static auto constexpr ImEnd = "<|im_end|>";
 
 private:
     static ModelParams r50k_base(IResourceReader* resource_reader = nullptr);
@@ -65,4 +68,5 @@ private:
     static ModelParams p50k_edit(IResourceReader* resource_reader = nullptr);
     static ModelParams cl100k_base(IResourceReader* resource_reader = nullptr);
     static ModelParams o200k_base(IResourceReader* resource_reader = nullptr);
+    static ModelParams qwen_base(IResourceReader* resource_reader = nullptr);
 };

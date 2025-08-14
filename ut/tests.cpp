@@ -121,3 +121,12 @@ TEST(TestGetEncoding, TestLLama3_1Tokenizer)
     ASSERT_EQ(paragraph[0], 271);
     ASSERT_EQ(decode_str, "<|begin_of_text|>This is a test sentence.<|end_of_text|>");
 }
+
+TEST(TestGetEncoding, TestEncode_QWEN_BASE)
+{
+    auto encoder = GptEncoding::get_encoding(LanguageModel::QWEN_BASE);
+    std::vector<int> tokens = encoder->encode("hello world");
+    ASSERT_EQ(tokens.size(), 2);
+    ASSERT_EQ(tokens[0], 14990);
+    ASSERT_EQ(tokens[1], 1879);
+}

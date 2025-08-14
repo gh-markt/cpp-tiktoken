@@ -18,6 +18,7 @@
 #include "modelparams.h"
 #include "emdedded_resource_reader.h"
 #include <stdexcept>
+#include <sstream>
 
 // ModelParams constructor and member functions
 
@@ -65,6 +66,8 @@ ModelParams ModelParamsGenerator::get_model_params(LanguageModel model, IResourc
             return p50k_edit(resource_reader);
         case LanguageModel::R50K_BASE:
             return r50k_base(resource_reader);
+        case LanguageModel::QWEN_BASE:
+            return qwen_base(resource_reader);
     }
     throw std::runtime_error("Invalid argument to get_model_params");
 }
@@ -78,6 +81,7 @@ static auto constexpr p50k_pattern = "'s|'t|'re|'ve|'m|'ll|'d| ?[a-zA-Z]+| ?[0-9
 // original regexes don't work with std::regex.  Need to come up with another solution to support other languages.
 static auto constexpr o200k_pattern = "[^\\r\\n\\p{L}\\p{N}]?[\\p{Lu}\\p{Lt}\\p{Lm}\\p{Lo}\\p{M}]*[\\p{Ll}\\p{Lm}\\p{Lo}\\p{M}]+(?i:'s|'t|'re|'ve|'m|'ll|'d)?|[^\\r\\n\\p{L}\\p{N}]?[\\p{Lu}\\p{Lt}\\p{Lm}\\p{Lo}\\p{M}]+[\\p{Ll}\\p{Lm}\\p{Lo}\\p{M}]*(?i:'s|'t|'re|'ve|'m|'ll|'d)?|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n/]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+";
 static auto constexpr cl100k_pattern = "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+";
+static auto constexpr qwen_pattern = "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+";
 static auto constexpr p50k_pattern = "'s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+";
 #endif
 
@@ -127,4 +131,20 @@ ModelParams ModelParamsGenerator::o200k_base(IResourceReader* resource_reader)
     std::unordered_map<std::string, int> specialTokens = { { EndOfText, 199999 }, { EndOfPrompt, 200018 } };
 
     return ModelParams(0, o200k_pattern, mergeableRanks, specialTokens);
+}
+
+ModelParams ModelParamsGenerator::qwen_base(IResourceReader* resource_reader)
+{
+    EmbeddedResourceLoader loader("qwen.tiktoken", resource_reader);
+    auto mergeableRanks = loader.loadTokenBytePairEncoding();
+
+    std::unordered_map<std::string, int> specialTokens = { { EndOfText, 151643 }, { ImStart, 151644 }, { ImEnd, 151645 } };
+
+    for (int i = 0; i < 205; i++) {
+        std::ostringstream oss;
+        oss << "<|extra_" << i << "|>";
+        specialTokens.emplace(oss.str(), 151646 + i);
+    }
+
+    return ModelParams(0, qwen_pattern, mergeableRanks, specialTokens);
 }
